@@ -1,14 +1,16 @@
-
 package com.mycompany.exam;
 
 import java.awt.GridLayout;
 import java.awt.event.ActionEvent;
+import java.io.IOException;
 
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.ScheduledFuture;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 import javax.swing.JButton;
 import javax.swing.JFrame;
@@ -30,6 +32,7 @@ public class GUIMeasurement extends JFrame {
     private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> monitoringTask;
     private AtomicBoolean monitoringActive = new AtomicBoolean(false);
+    private LogHandler logHandler = new LogHandler();
 
     public GUIMeasurement() {
         JPanel mainPanel = new JPanel(new GridLayout(4, 2));
@@ -40,7 +43,11 @@ public class GUIMeasurement extends JFrame {
             startMonitoring();
         });
         endButton.addActionListener((ActionEvent e) -> {
-            stopMonitoring();
+            try {
+                stopMonitoring();
+            } catch (IOException ex) {
+                Logger.getLogger(GUIMeasurement.class.getName()).log(Level.SEVERE, null, ex);
+            }
         });
 
         JLabel t = new JLabel("Температура");
@@ -68,16 +75,20 @@ public class GUIMeasurement extends JFrame {
         monitoringActive.set(true);
         System.out.println("процесс мониторинга запущен");
         monitoringTask = scheduler.scheduleAtFixedRate(() -> {
-                Measurement measurement = generateRandomMeasurement();
-                patient.addMeasurement(measurement);
-                SwingUtilities.invokeLater(() -> updateUI(measurement));
+            Measurement measurement = generateRandomMeasurement();
+            patient.addMeasurement(measurement);
+            logHandler.writeMeasurement(patient, measurement);
+            SwingUtilities.invokeLater(() -> updateUI(measurement));
         }, 0, 1, TimeUnit.SECONDS);
     }
 
-    private void stopMonitoring() {
+    private void stopMonitoring() throws IOException {
         monitoringActive.set(false);
         if (monitoringTask != null && !monitoringTask.isCancelled()) {
             monitoringTask.cancel(true);
+            System.out.println("процесс мониторинга приостановлен");
+            System.out.println(logHandler.getLastMeasurements(patient.getId(), 10));
+//            logHandler.getLastMeasurements(patient.getId(), 10);
         }
     }
 

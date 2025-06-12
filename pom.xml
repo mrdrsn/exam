@@ -11,4 +11,16 @@
         <maven.compiler.target>22</maven.compiler.target>
         <exec.mainClass>com.mycompany.exam.Exam</exec.mainClass>
     </properties>
+    <build>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <includes>
+                    <include>**/*.otf</include>
+                    <include>**/*.ttf</include>
+                    <include>**/*.png</include>
+                </includes>
+            </resource>
+        </resources>
+    </build>    
 </project>
