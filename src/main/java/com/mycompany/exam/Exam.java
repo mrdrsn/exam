@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- */
-
 package com.mycompany.exam;
 
 /**
@@ -11,6 +7,6 @@ package com.mycompany.exam;
 public class Exam {
 
     public static void main(String[] args) {
-        System.out.println("Hello World!");
+        GUIMeasurement g = new GUIMeasurement();
     }
 }
