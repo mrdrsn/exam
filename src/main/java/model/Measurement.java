@@ -1,5 +1,5 @@
 
-package com.mycompany.exam;
+package model;
 
 /**
  *

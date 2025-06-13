@@ -1,5 +1,7 @@
 package com.mycompany.exam;
 
+import view.GUIMeasurement;
+
 /**
  *
  * @author Nastya

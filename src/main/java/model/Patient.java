@@ -1,6 +1,7 @@
 
-package com.mycompany.exam;
+package model;
 
+import model.Measurement;
 import java.util.List;
 import java.util.ArrayList;
 

@@ -1,5 +1,5 @@
 
-package com.mycompany.exam;
+package view;
 
 import java.awt.BorderLayout;
 import java.awt.Color;
