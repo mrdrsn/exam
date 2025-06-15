@@ -27,6 +27,7 @@ public class ScheduledGeneration {
 
         task = scheduler.scheduleAtFixedRate(() -> {
             Measurement measurement = generateRandom();
+            
             onNewMeasurement.accept(measurement);
             System.out.println(measurement); //отладка
         }, 0, 1, TimeUnit.SECONDS);
@@ -44,6 +45,7 @@ public class ScheduledGeneration {
         double temperature = 36.0 + Math.random() * 3;
         int heartRate = 60 + (int) (Math.random() * 30);
         int cvp = 5 + (int) (Math.random() * 5);
+        System.out.println(new Measurement(temperature, heartRate, cvp));
         return new Measurement(temperature, heartRate, cvp);
     }
 

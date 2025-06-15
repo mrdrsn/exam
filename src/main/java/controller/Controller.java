@@ -76,7 +76,7 @@ public class Controller {
             return false;
         }
         //оставить в случае: добавление пациента -> сразу переход на страницу мониторинга
-//        this.currentPatient = new Patient(id, name);
+        this.currentPatient = new Patient(id, name);
         boolean fileCreated = logHandler.createEmptyLogFile(id, name);
         return fileCreated;
     }
@@ -90,6 +90,9 @@ public class Controller {
 
     public List<String> getAllPatientIds() {
         return logHandler.getAllPatientIds();
+    }
+    public String generateNewPatientId(){
+        return logHandler.generateNewPatientId();
     }
 
 }

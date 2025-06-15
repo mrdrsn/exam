@@ -169,4 +169,30 @@ public class LogHandler {
                 .map(file -> file.getName().replace(".log", ""))
                 .collect(Collectors.toList());
     }
+
+    public String generateNewPatientId() {
+        File dir = new File(LOGS_DIR);
+        if (!dir.exists() || !dir.isDirectory()) {
+            return "P001"; // если нет ни одного файла
+        }
+
+        // Получаем список всех файлов пациентов
+        File[] files = dir.listFiles((dir1, name) -> name.startsWith("P") && name.matches("P\\d{3}\\.log"));
+        if (files == null || files.length == 0) {
+            return "P001";
+        }
+
+        // Извлекаем номера из названий файлов
+        int maxNumber = Arrays.stream(files)
+                .map(file -> file.getName().replace(".log", ""))
+                .map(name -> name.substring(1)) // убираем 'P'
+                .mapToInt(Integer::parseInt)
+                .max()
+                .orElse(0);
+
+        int nextNumber = maxNumber + 1;
+
+        // Формируем ID с ведущими нулями
+        return String.format("P%03d", nextNumber);
+    }
 }
