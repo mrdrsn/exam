@@ -17,6 +17,7 @@ import javax.swing.JPanel;
  *
  * @author Nastya
  */
+
 public class BackgroundPanelStrict extends JPanel {
 
     private BufferedImage image;
@@ -47,8 +48,43 @@ public class BackgroundPanelStrict extends JPanel {
         if (image != null) {
             Graphics2D g2d = (Graphics2D) g.create();
             g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
-            g2d.drawImage(image, 0, 0, this);
+            g2d.drawImage(image, 0, 0, image.getWidth(), image.getHeight(), this);
             g2d.dispose();
         }
     }
 }
+//public class BackgroundPanelStrict extends JPanel {
+//
+//    private BufferedImage image;
+//    private float opacity = 1.0f;
+//
+//    public BackgroundPanelStrict(String path, boolean scale) {
+//        this(path, scale, 1.0f);
+//    }
+//
+//    public BackgroundPanelStrict(String path, boolean scale, float opacity) {
+//        this.opacity = opacity;
+//        try {
+//            image = ImageIO.read(getClass().getResource(path));
+//            if (!scale && image != null) {
+//                setPreferredSize(new Dimension(image.getWidth(), image.getHeight()));
+//                setMaximumSize(getPreferredSize());
+//                setMinimumSize(getPreferredSize());
+//            }
+//        } catch (IOException e) {
+//            e.printStackTrace();
+//        }
+//        setOpaque(false);
+//    }
+//
+//    @Override
+//    protected void paintComponent(Graphics g) {
+//        super.paintComponent(g);
+//        if (image != null) {
+//            Graphics2D g2d = (Graphics2D) g.create();
+//            g2d.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, opacity));
+//            g2d.drawImage(image, 0, 0, this);
+//            g2d.dispose();
+//        }
+//    }
+//}
