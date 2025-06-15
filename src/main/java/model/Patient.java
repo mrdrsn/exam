@@ -41,4 +41,8 @@ public class Patient {
     public List<Measurement> getMeasurements() {
         return this.measurement;
     }
+    @Override
+    public String toString(){
+        return this.id + " " + this.name;
+    }
 }

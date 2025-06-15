@@ -15,9 +15,12 @@ import model.Patient;
 import java.awt.event.ActionEvent;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
+import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -36,6 +39,23 @@ public class GUIMeasurement extends JFrame {
     private JLabel heartRateLabel = new JLabel("-");
     private JLabel cvpLabel = new JLabel("-");
     private JButton backButton; // кнопка "Назад" для мониторинга
+
+    private JLabel patientNameLabel;
+    private JLabel patientIdLabel;
+    private JLabel currentTempLabel;
+    private JLabel currentHrLabel;
+    private JLabel currentCvpLabel;
+
+    private JButton startMonitoringButton;
+    private JButton endMonitoringButton;
+
+    private JPanel recentTempPanel;
+    private JPanel recentHrPanel;
+    private JPanel recentCvpPanel;
+
+    private Map<String, String> patientInfo = new HashMap<>();
+
+    private JPanel monitoringPanel = new JPanel();
 
     public GUIMeasurement() {
         this.controller = new Controller(this);
@@ -305,9 +325,24 @@ public class GUIMeasurement extends JFrame {
         backgroundPanel.setLayout(new BoxLayout(backgroundPanel, BoxLayout.X_AXIS));
         backgroundPanel.setOpaque(false);
 
-        // Пример добавления компонентов на фон:
-        addExampleComponents(backgroundPanel);
+        JPanel helperPanel = new JPanel();
+        helperPanel.setPreferredSize(new Dimension(340, 1200));
+        helperPanel.setMinimumSize(helperPanel.getPreferredSize());
+        helperPanel.setMaximumSize(helperPanel.getPreferredSize());
+        helperPanel.setOpaque(false);
+//        JPanel monitoringPanel = new JPanel();
+        monitoringPanel.setLayout(new BoxLayout(monitoringPanel, BoxLayout.Y_AXIS));
+        monitoringPanel.setPreferredSize(new Dimension(940, 1200));
+        monitoringPanel.setMaximumSize(monitoringPanel.getPreferredSize());
+        monitoringPanel.setMinimumSize(monitoringPanel.getPreferredSize());
+        monitoringPanel.setOpaque(false);
 
+        backgroundPanel.add(helperPanel);
+        backgroundPanel.add(monitoringPanel);
+
+        // Пример добавления компонентов на фон:
+//        choosePatientPanel(monitoringPanel);
+//        addExampleComponents(monitoringPanel);
         JScrollPane scrollPane = new JScrollPane(backgroundPanel);
         scrollPane.setBounds(0, 0, 1280, 720);
         scrollPane.setOpaque(false);
@@ -328,6 +363,35 @@ public class GUIMeasurement extends JFrame {
         leftPanel.setOpaque(false);
         leftPanel.setBounds(0, 0, 339, 720); // фиксировано слева поверх фона
 
+        JPanel patientListPanel = new JPanel();
+        patientListPanel.setLayout(new BoxLayout(patientListPanel, BoxLayout.Y_AXIS));
+        patientListPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        patientListPanel.setPreferredSize(new Dimension(275, 720));
+        patientListPanel.setMinimumSize(new Dimension(275, 720));
+        patientListPanel.setMaximumSize(new Dimension(275, 720));
+        patientListPanel.setOpaque(false);
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttonPanel.setPreferredSize(new Dimension(300,45));
+        buttonPanel.setMinimumSize(buttonPanel.getPreferredSize());
+        buttonPanel.setMaximumSize(buttonPanel.getPreferredSize());
+        
+        ImageIcon backIcon = new ImageIcon(getClass().getResource("/icon_back.png"));
+        JButton backToMenuButton = createIconButton("/icon_back.png");
+        backToMenuButton.setAlignmentX(Component.LEFT_ALIGNMENT);
+        backToMenuButton.setPreferredSize(new Dimension(35,35));
+        backToMenuButton.setMinimumSize(new Dimension(35,35));
+        backToMenuButton.setMaximumSize(new Dimension(35,35));
+//        backToMenuButton.setBorderPainted(false);
+//        backToMenuButton.setContentAreaFilled(false);
+//        backToMenuButton.setFocusPainted(false);
+        patientListPanel.add(Box.createVerticalStrut(30));
+        patientListPanel.add(buttonPanel);
+        backToMenuButton.addActionListener(e -> {
+            setupUI();
+        });
+        buttonPanel.add(backToMenuButton);
+        createPatientList(patientListPanel);
+        leftPanel.add(patientListPanel);
         // === Добавляем в слои ===
         layeredPane.add(scrollPane, JLayeredPane.DEFAULT_LAYER);      // фон с прокруткой
         layeredPane.add(leftPanel, JLayeredPane.PALETTE_LAYER);       // PNG поверх
@@ -339,207 +403,70 @@ public class GUIMeasurement extends JFrame {
         setLocationRelativeTo(null);
         setVisible(true);
     }
+    private JButton createIconButton(String path){
+        ImageIcon icon = new ImageIcon(getClass().getResource("/icon_back.png"));
+        JButton button = new JButton(icon);
+        button.setAlignmentX(Component.LEFT_ALIGNMENT);
+        button.setPreferredSize(new Dimension(35,35));
+        button.setMinimumSize(new Dimension(35,35));
+        button.setMaximumSize(new Dimension(35,35));
+//        backToMenuButton.setBorderPainted(false);
+//        backToMenuButton.setContentAreaFilled(false);
+//        backToMenuButton.setFocusPainted(false);
+        return button;
+    }
 
-    private void addExampleComponents(JPanel panel) {
-        Font fontSFMedium = CustomFontLoader.loadCustomFont(64, "fonts/SFProText-Medium.ttf");
+    private void choosePatientPanel(JPanel panel) {
+        JPanel borderPanel = new JPanel();
+        borderPanel.setLayout(new BoxLayout(borderPanel, BoxLayout.Y_AXIS));
+        borderPanel.setOpaque(false);
         Font fontSFMediumS = CustomFontLoader.loadCustomFont(40, "fonts/SFProText-Medium.ttf");
-        Font fontSFMediumT = CustomFontLoader.loadCustomFont(24, "fonts/SFProText-Medium.ttf");
-        Font fontSF = CustomFontLoader.loadCustomFont(16, "fonts/SFProText-Regular.ttf");
+        JLabel choosePatient = new JLabel("Выберите пациента для начала работы.");
 
-        JPanel leftPanel = new JPanel();
-        leftPanel.setPreferredSize(new Dimension(340, 1200));
-        leftPanel.setMinimumSize(leftPanel.getPreferredSize());
-        leftPanel.setMaximumSize(leftPanel.getPreferredSize());
-        JPanel rightPanel = new JPanel();
-        rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
-        rightPanel.setPreferredSize(new Dimension(940, 1200));
-        rightPanel.setMaximumSize(rightPanel.getPreferredSize());
-        rightPanel.setMinimumSize(rightPanel.getPreferredSize());
-        rightPanel.setOpaque(false);
-
-        JLabel patientNameLabel = new JLabel("Иванов Иван Иванович");
-        patientNameLabel.setFont(fontSFMedium);
-        patientNameLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        patientNameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel patientIdLabel = new JLabel("P001");
-        patientIdLabel.setFont(fontSFMedium);
-        patientIdLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        patientIdLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JLabel currentMeasurementsLabel = new JLabel("Текущие значения показателей");
-        currentMeasurementsLabel.setFont(fontSFMediumS);
-        currentMeasurementsLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        currentMeasurementsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JPanel currentTempPanel = createPanelForCurrents();
-        JPanel currentHrPanel = createPanelForCurrents();
-        JPanel currentCvpPanel = createPanelForCurrents();
-
-        JLabel currentTemp = new JLabel("Температура, °C : ");
-        currentTemp.setFont(fontSFMediumT);
-        JLabel currentTempLabel = new JLabel("36,6");
-        currentTempLabel.setFont(fontSFMediumT);
-
-        currentTempPanel.add(currentTemp);
-        currentTempPanel.add(Box.createHorizontalStrut(100));
-        currentTempPanel.add(currentTempLabel);
-
-        JLabel currentHr = new JLabel("Сердечный ритм, уд/мин :");
-        currentHr.setFont(fontSFMediumT);
-        JLabel currentHrLabel = new JLabel("100");
-        currentHrLabel.setFont(fontSFMediumT);
-
-        currentHrPanel.add(currentHr);
-        currentHrPanel.add(Box.createHorizontalStrut(100));
-        currentHrPanel.add(currentHrLabel);
-
-        JLabel currentCvp = new JLabel("ЦВД, мм рт. ст. :");
-        currentCvp.setFont(fontSFMediumT);
-        JLabel currentCvpLabel = new JLabel("4");
-        currentCvpLabel.setFont(fontSFMediumT);
-
-        currentCvpPanel.add(currentCvp);
-        currentCvpPanel.add(Box.createHorizontalStrut(100));
-        currentCvpPanel.add(currentCvpLabel);
-
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        buttonPanel.setPreferredSize(new Dimension(475, 65));
-        buttonPanel.setMaximumSize(buttonPanel.getPreferredSize());
-        buttonPanel.setMinimumSize(buttonPanel.getPreferredSize());
-        buttonPanel.setOpaque(false);
-        buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JButton startMonitoringButton = new RoundedButton("Начать мониторинг");
-        startMonitoringButton.setPreferredSize(new Dimension(230, 60));
-        startMonitoringButton.setMinimumSize(startMonitoringButton.getPreferredSize());
-        startMonitoringButton.setMaximumSize(startMonitoringButton.getPreferredSize());
-        startMonitoringButton.setBackground(Color.decode("#e0eef2"));
-        startMonitoringButton.setFont(fontSF);
-
-        JButton endMonitoringButton = new RoundedButton("Завершить мониторинг");
-        endMonitoringButton.setPreferredSize(new Dimension(230, 60));
-        endMonitoringButton.setMinimumSize(endMonitoringButton.getPreferredSize());
-        endMonitoringButton.setMaximumSize(endMonitoringButton.getPreferredSize());
-        endMonitoringButton.setBackground(Color.decode("#d9d9d9"));
-        endMonitoringButton.setFont(fontSF);
-
-        buttonPanel.add(startMonitoringButton);
-        buttonPanel.add(endMonitoringButton);
-
-        JLabel recentMeasurementsLabel = new JLabel("Предыдущие значения показателей");
-        recentMeasurementsLabel.setFont(fontSFMediumS);
-        recentMeasurementsLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        recentMeasurementsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JPanel recentsPanel = new JPanel();
-        recentsPanel.setLayout(new BoxLayout(recentsPanel, BoxLayout.X_AXIS));
-        recentsPanel.setPreferredSize(new Dimension(900, 316));
-        recentsPanel.setMaximumSize(recentsPanel.getPreferredSize());
-        recentsPanel.setMinimumSize(recentsPanel.getPreferredSize());
-        recentsPanel.setOpaque(false);
-        recentsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        JPanel tempPanel = createHolderPanel(213);
-        JPanel hrPanel = createHolderPanel(310);
-        JPanel cvpPanel = createHolderPanel(215);
-
-        JLabel recentTemp = new JLabel("Температура, °C");
-        recentTemp.setFont(fontSFMediumT);
-        recentTemp.setAlignmentX(Component.LEFT_ALIGNMENT);
-        recentTemp.setHorizontalAlignment(SwingConstants.LEFT);
-        
-        JLabel recentHr = new JLabel("Сердечный ритм, уд/мин");
-        recentHr.setFont(fontSFMediumT);
-        recentHr.setAlignmentX(Component.LEFT_ALIGNMENT);
-        recentHr.setHorizontalAlignment(SwingConstants.LEFT);
-        
-        JLabel recentCvp = new JLabel("ЦВД, мм рт. ст.");
-        recentCvp.setFont(fontSFMediumT);
-        recentCvp.setAlignmentX(Component.LEFT_ALIGNMENT);
-        recentCvp.setHorizontalAlignment(SwingConstants.LEFT);
-
-        JPanel recentTempPanel = createPanelForRecents();
-        JPanel recentHrPanel = createPanelForRecents();
-        JPanel recentCvpPanel = createPanelForRecents();
-
-        tempPanel.add(recentTemp);
-        tempPanel.add(Box.createVerticalStrut(16));
-        tempPanel.add(recentTempPanel);
-        
-        hrPanel.add(recentHr);
-        hrPanel.add(Box.createVerticalStrut(16));
-        hrPanel.add(recentHrPanel);
-
-        cvpPanel.add(recentCvp);
-        cvpPanel.add(Box.createVerticalStrut(16));
-        cvpPanel.add(recentCvpPanel);
-        
-        recentsPanel.add(tempPanel);
-        recentsPanel.add(Box.createHorizontalStrut(74));
-        recentsPanel.add(hrPanel);
-        recentsPanel.add(Box.createHorizontalStrut(34));
-        recentsPanel.add(cvpPanel);
-        
-        JLabel otherInfoLabel = new JLabel("Доп информация:");
-        otherInfoLabel.setFont(fontSF);
-        otherInfoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        otherInfoLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        
-        // Start content at the top
-        rightPanel.add(Box.createVerticalStrut(44)); // Only necessary spacing
-        rightPanel.add(patientNameLabel);
-        rightPanel.add(patientIdLabel);
-        rightPanel.add(Box.createVerticalStrut(44)); // Only necessary spacing
-        rightPanel.add(currentMeasurementsLabel);
-        rightPanel.add(Box.createVerticalStrut(30));
-        rightPanel.add(currentTempPanel);
-        rightPanel.add(Box.createVerticalStrut(19));
-        rightPanel.add(currentHrPanel);
-        rightPanel.add(Box.createVerticalStrut(19));
-        rightPanel.add(currentCvpPanel);
-        rightPanel.add(Box.createVerticalStrut(40));
-        rightPanel.add(buttonPanel);
-        rightPanel.add(Box.createVerticalStrut(40));
-        rightPanel.add(recentMeasurementsLabel);
-        rightPanel.add(Box.createVerticalStrut(80));
-        rightPanel.add(recentsPanel);
-        rightPanel.add(Box.createVerticalStrut(40));
-        rightPanel.add(otherInfoLabel);
-
-        panel.add(leftPanel);
-        panel.add(rightPanel);
+        choosePatient.setFont(fontSFMediumS);
+        borderPanel.add(Box.createVerticalStrut(30));
+        borderPanel.add(choosePatient);
+        panel.add(borderPanel);
     }
 
-    private JPanel createPanelForCurrents() {
-        JPanel currentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        currentPanel.setPreferredSize(new Dimension(490, 45));
-        currentPanel.setMaximumSize(currentPanel.getPreferredSize());
-        currentPanel.setMinimumSize(currentPanel.getPreferredSize());
-        currentPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        currentPanel.setBackground(Color.decode("#e2f0f5"));
-        return currentPanel;
+    private void createPatientList(JPanel panel) {
+        panel.add(Box.createVerticalStrut(30));
+        patientInfo = controller.getAllPatientFullNames();
+
+        for (Map.Entry<String, String> entry : patientInfo.entrySet()) {
+            PatientListItem item = new PatientListItem(entry.getValue());
+            item.setPreferredSize(new Dimension(235, 35));
+            item.setMaximumSize(new Dimension(235, 35));
+            item.setMinimumSize(new Dimension(235, 35));
+            panel.add(item);
+            panel.add(Box.createVerticalStrut(13));
+            item.addActionListener(e -> {
+
+                if (controller.isMonitoringActive()) {
+                    JOptionPane.showMessageDialog(this, "Сначала остановите мониторинг", "Ошибка",
+                            JOptionPane.WARNING_MESSAGE);
+                } else {
+                    controller.setPatient(new Patient(entry.getKey(), controller.getPatientNameFromLogFile(entry.getKey())));
+                    System.out.println(controller.getCurrentPatient());
+                    monitoringPanel.removeAll();
+                    preparePatientPanel(monitoringPanel);
+                }
+            });
+        }
     }
 
-    private JPanel createPanelForRecents() {
-        JPanel recentTempPanel = new RoundedPanel(20);
-        recentTempPanel.setPreferredSize(new Dimension(213, 266));
-        recentTempPanel.setMaximumSize(recentTempPanel.getPreferredSize());
-        recentTempPanel.setMinimumSize(recentTempPanel.getPreferredSize());
-        recentTempPanel.setBackground(Color.decode("#e9e9e9"));
-        recentTempPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return recentTempPanel;
+    private void preparePatientPanel() {
+        patientNameLabel.setText(controller.getCurrentPatient().getFullName());
+        patientIdLabel.setText(controller.getCurrentPatient().getId());
+        currentTempLabel.setText("");
+        currentHrLabel.setText("");
+        currentCvpLabel.setText("");
     }
 
-    private JPanel createHolderPanel(int x) {
-        JPanel tempPanel = new JPanel();
-        tempPanel.setLayout(new BoxLayout(tempPanel, BoxLayout.Y_AXIS));
-        tempPanel.setPreferredSize(new Dimension(x, 316));
-        tempPanel.setMaximumSize(tempPanel.getPreferredSize());
-        tempPanel.setMinimumSize(tempPanel.getPreferredSize());
-        tempPanel.setOpaque(false);
-        tempPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        return tempPanel;
+    public void updateUID(MeasurementViewModel viewModel) {
+        currentTempLabel.setText(viewModel.getTemperatureText());
+        currentHrLabel.setText(viewModel.getHeartRateText());
+        currentCvpLabel.setText(viewModel.getCvpText());
     }
 
     private void openPatientListUI() {
@@ -594,6 +521,204 @@ public class GUIMeasurement extends JFrame {
         setSize(400, 300);
         setLocationRelativeTo(null);
         setVisible(true);
+    }
+
+    private void preparePatientPanel(JPanel rightPanel) {
+        Font fontSFMedium = CustomFontLoader.loadCustomFont(64, "fonts/SFProText-Medium.ttf");
+        Font fontSFMediumS = CustomFontLoader.loadCustomFont(40, "fonts/SFProText-Medium.ttf");
+        Font fontSFMediumT = CustomFontLoader.loadCustomFont(24, "fonts/SFProText-Medium.ttf");
+        Font fontSF = CustomFontLoader.loadCustomFont(16, "fonts/SFProText-Regular.ttf");
+
+        patientNameLabel = new JLabel();
+        patientNameLabel.setText(controller.getCurrentPatient().getFullName());
+        patientNameLabel.setFont(fontSFMedium);
+        patientNameLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        patientNameLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        patientIdLabel = new JLabel();
+        patientIdLabel.setText(controller.getCurrentPatient().getId());
+        patientIdLabel.setFont(fontSFMedium);
+        patientIdLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        patientIdLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel currentMeasurementsLabel = new JLabel("Текущие значения показателей");
+        currentMeasurementsLabel.setFont(fontSFMediumS);
+        currentMeasurementsLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        currentMeasurementsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel currentTempPanel = createPanelForCurrents();
+        JPanel currentHrPanel = createPanelForCurrents();
+        JPanel currentCvpPanel = createPanelForCurrents();
+
+        JLabel currentTemp = new JLabel("Температура, °C : ");
+        currentTemp.setFont(fontSFMediumT);
+        currentTempLabel = new JLabel();
+        currentTempLabel.setFont(fontSFMediumT);
+
+        currentTempPanel.add(currentTemp);
+        currentTempPanel.add(Box.createHorizontalStrut(100));
+        currentTempPanel.add(currentTempLabel);
+
+        JLabel currentHr = new JLabel("Сердечный ритм, уд/мин :");
+        currentHr.setFont(fontSFMediumT);
+        currentHrLabel = new JLabel();
+        currentHrLabel.setFont(fontSFMediumT);
+
+        currentHrPanel.add(currentHr);
+        currentHrPanel.add(Box.createHorizontalStrut(100));
+        currentHrPanel.add(currentHrLabel);
+
+        JLabel currentCvp = new JLabel("ЦВД, мм рт. ст. :");
+        currentCvp.setFont(fontSFMediumT);
+        currentCvpLabel = new JLabel();
+        currentCvpLabel.setFont(fontSFMediumT);
+
+        currentCvpPanel.add(currentCvp);
+        currentCvpPanel.add(Box.createHorizontalStrut(100));
+        currentCvpPanel.add(currentCvpLabel);
+
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        buttonPanel.setPreferredSize(new Dimension(475, 65));
+        buttonPanel.setMaximumSize(buttonPanel.getPreferredSize());
+        buttonPanel.setMinimumSize(buttonPanel.getPreferredSize());
+        buttonPanel.setOpaque(false);
+        buttonPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        startMonitoringButton = new RoundedButton("Начать мониторинг");
+        startMonitoringButton.setPreferredSize(new Dimension(230, 60));
+        startMonitoringButton.setMinimumSize(startMonitoringButton.getPreferredSize());
+        startMonitoringButton.setMaximumSize(startMonitoringButton.getPreferredSize());
+        startMonitoringButton.setBackground(Color.decode("#e0eef2"));
+        startMonitoringButton.setFont(fontSF);
+
+        endMonitoringButton = new RoundedButton("Завершить мониторинг");
+        endMonitoringButton.setPreferredSize(new Dimension(230, 60));
+        endMonitoringButton.setMinimumSize(endMonitoringButton.getPreferredSize());
+        endMonitoringButton.setMaximumSize(endMonitoringButton.getPreferredSize());
+        endMonitoringButton.setBackground(Color.decode("#d9d9d9"));
+        endMonitoringButton.setFont(fontSF);
+
+        startMonitoringButton.addActionListener(e -> controller.startMonitoring());
+        endMonitoringButton.addActionListener(e -> controller.stopMonitoring());
+
+        buttonPanel.add(startMonitoringButton);
+        buttonPanel.add(endMonitoringButton);
+
+        JLabel recentMeasurementsLabel = new JLabel("Предыдущие значения показателей");
+        recentMeasurementsLabel.setFont(fontSFMediumS);
+        recentMeasurementsLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        recentMeasurementsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel recentsPanel = new JPanel();
+        recentsPanel.setLayout(new BoxLayout(recentsPanel, BoxLayout.X_AXIS));
+        recentsPanel.setPreferredSize(new Dimension(900, 316));
+        recentsPanel.setMaximumSize(recentsPanel.getPreferredSize());
+        recentsPanel.setMinimumSize(recentsPanel.getPreferredSize());
+        recentsPanel.setOpaque(false);
+        recentsPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JPanel tempPanel = createHolderPanel(213);
+        JPanel hrPanel = createHolderPanel(310);
+        JPanel cvpPanel = createHolderPanel(215);
+
+        JLabel recentTemp = new JLabel("Температура, °C");
+        recentTemp.setFont(fontSFMediumT);
+        recentTemp.setAlignmentX(Component.LEFT_ALIGNMENT);
+        recentTemp.setHorizontalAlignment(SwingConstants.LEFT);
+
+        JLabel recentHr = new JLabel("Сердечный ритм, уд/мин");
+        recentHr.setFont(fontSFMediumT);
+        recentHr.setAlignmentX(Component.LEFT_ALIGNMENT);
+        recentHr.setHorizontalAlignment(SwingConstants.LEFT);
+
+        JLabel recentCvp = new JLabel("ЦВД, мм рт. ст.");
+        recentCvp.setFont(fontSFMediumT);
+        recentCvp.setAlignmentX(Component.LEFT_ALIGNMENT);
+        recentCvp.setHorizontalAlignment(SwingConstants.LEFT);
+
+        recentTempPanel = createPanelForRecents();
+        recentHrPanel = createPanelForRecents();
+        recentCvpPanel = createPanelForRecents();
+
+        tempPanel.add(recentTemp);
+        tempPanel.add(Box.createVerticalStrut(16));
+        tempPanel.add(recentTempPanel);
+
+        hrPanel.add(recentHr);
+        hrPanel.add(Box.createVerticalStrut(16));
+        hrPanel.add(recentHrPanel);
+
+        cvpPanel.add(recentCvp);
+        cvpPanel.add(Box.createVerticalStrut(16));
+        cvpPanel.add(recentCvpPanel);
+
+        recentsPanel.add(tempPanel);
+        recentsPanel.add(Box.createHorizontalStrut(74));
+        recentsPanel.add(hrPanel);
+        recentsPanel.add(Box.createHorizontalStrut(34));
+        recentsPanel.add(cvpPanel);
+
+        JLabel otherInfoLabel = new JLabel("Доп информация:");
+        otherInfoLabel.setFont(fontSF);
+        otherInfoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        otherInfoLabel.setHorizontalAlignment(SwingConstants.LEFT);
+
+        // Start content at the top
+        rightPanel.add(Box.createVerticalStrut(44)); // Only necessary spacing
+        rightPanel.add(patientNameLabel);
+        rightPanel.add(patientIdLabel);
+        rightPanel.add(Box.createVerticalStrut(44)); // Only necessary spacing
+        rightPanel.add(currentMeasurementsLabel);
+        rightPanel.add(Box.createVerticalStrut(30));
+        rightPanel.add(currentTempPanel);
+        rightPanel.add(Box.createVerticalStrut(19));
+        rightPanel.add(currentHrPanel);
+        rightPanel.add(Box.createVerticalStrut(19));
+        rightPanel.add(currentCvpPanel);
+        rightPanel.add(Box.createVerticalStrut(40));
+        rightPanel.add(buttonPanel);
+        rightPanel.add(Box.createVerticalStrut(40));
+        rightPanel.add(recentMeasurementsLabel);
+        rightPanel.add(Box.createVerticalStrut(80));
+        rightPanel.add(recentsPanel);
+        rightPanel.add(Box.createVerticalStrut(40));
+        rightPanel.add(otherInfoLabel);
+
+        rightPanel.repaint();
+        rightPanel.revalidate();
+
+    }
+
+    private JPanel createPanelForCurrents() {
+        JPanel currentPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        currentPanel.setPreferredSize(new Dimension(490, 45));
+        currentPanel.setMaximumSize(currentPanel.getPreferredSize());
+        currentPanel.setMinimumSize(currentPanel.getPreferredSize());
+        currentPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        currentPanel.setBackground(Color.decode("#e2f0f5"));
+        return currentPanel;
+    }
+
+    private JPanel createPanelForRecents() {
+        JPanel recentTempPanel = new RoundedPanel(20);
+        recentTempPanel.setPreferredSize(new Dimension(213, 266));
+        recentTempPanel.setMaximumSize(recentTempPanel.getPreferredSize());
+        recentTempPanel.setMinimumSize(recentTempPanel.getPreferredSize());
+        recentTempPanel.setBackground(Color.decode("#e9e9e9"));
+        recentTempPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        recentTempPanel.setLayout(new BoxLayout(recentTempPanel, BoxLayout.Y_AXIS));
+        return recentTempPanel;
+    }
+
+    private JPanel createHolderPanel(int x) {
+        JPanel tempPanel = new JPanel();
+        tempPanel.setLayout(new BoxLayout(tempPanel, BoxLayout.Y_AXIS));
+        tempPanel.setPreferredSize(new Dimension(x, 316));
+        tempPanel.setMaximumSize(tempPanel.getPreferredSize());
+        tempPanel.setMinimumSize(tempPanel.getPreferredSize());
+        tempPanel.setOpaque(false);
+        tempPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return tempPanel;
     }
 
     private void monitoringWindow() {

@@ -195,4 +195,33 @@ public class LogHandler {
         // Формируем ID с ведущими нулями
         return String.format("P%03d", nextNumber);
     }
+
+    public String parseFullNameFromLog(String patientId) {
+        File logFile = getLogFile(patientId);
+        try (BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
+            String firstLine = reader.readLine();
+            if (firstLine != null && firstLine.startsWith("name=")) {
+                String fullName = firstLine.substring(5).trim(); // обрезаем "name="
+                return formatShortName(fullName);
+            }
+        } catch (IOException e) {
+            System.err.println("Ошибка чтения имени из файла: " + e.getMessage());
+        }
+        return "Без имени";
+    }
+
+    private String formatShortName(String fullName) {
+        String[] parts = fullName.split("\\s+");
+        StringBuilder shortName = new StringBuilder(parts[0]); // фамилия
+
+        if (parts.length > 1) {
+            shortName.append(" ").append(parts[1].charAt(0)).append(".");
+        }
+
+        if (parts.length > 2) {
+            shortName.append(parts[2].charAt(0)).append(".");
+        }
+
+        return shortName.toString();
+    }
 }

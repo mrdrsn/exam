@@ -2,7 +2,10 @@ package controller;
 
 import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
@@ -18,6 +21,9 @@ public class Controller {
 
     public Controller(GUIMeasurement view) {
         this.view = view;
+        this.generator = new ScheduledGeneration(this::onNewMeasurement);
+    }
+    public Controller(){
         this.generator = new ScheduledGeneration(this::onNewMeasurement);
     }
 
@@ -40,7 +46,7 @@ public class Controller {
         List<Measurement> lastMeasurements = logHandler.getLastMeasurements(patientId, 10);
 
         SwingUtilities.invokeLater(() -> {
-            view.updateUI(new MeasurementViewModel(
+            view.updateUID(new MeasurementViewModel(
                     lastMeasurements.isEmpty() ? 0 : lastMeasurements.get(0).getTemperature(),
                     lastMeasurements.isEmpty() ? 0 : lastMeasurements.get(0).getHeartRate(),
                     lastMeasurements.isEmpty() ? 0 : lastMeasurements.get(0).getCvp()
@@ -68,7 +74,7 @@ public class Controller {
                 m.getHeartRate(),
                 m.getCvp()
         );
-        SwingUtilities.invokeLater(() -> view.updateUI(viewModel));
+        SwingUtilities.invokeLater(() -> view.updateUID(viewModel));
     }
 
     public boolean addPatient(String name, String id) {
@@ -82,7 +88,7 @@ public class Controller {
     }
 
     public void printAllPatients() {
-        List<Patient> patients = logHandler.getAllPatients(); 
+        List<Patient> patients = logHandler.getAllPatients();
         for (Patient p : patients) {
             System.out.println(p.getId() + " — " + p.getFullName());
         }
@@ -91,8 +97,27 @@ public class Controller {
     public List<String> getAllPatientIds() {
         return logHandler.getAllPatientIds();
     }
-    public String generateNewPatientId(){
+
+    public String generateNewPatientId() {
         return logHandler.generateNewPatientId();
+    }
+    public String getPatientNameFromLogFile(String patientId){
+        return logHandler.getPatientNameFromLogFile(patientId);
+    }
+    public String parseFullNameFromLog(String patientId){
+        return logHandler.parseFullNameFromLog(patientId);
+    }
+    public Map<String,String> getAllPatientFullNames(){
+        Map<String,String> patientInfo = new HashMap<>();
+        
+        
+        List<String> patientFullNames = new ArrayList<>();
+        List<String> patientIds = getAllPatientIds();
+        for(String id: patientIds){
+            patientFullNames.add(parseFullNameFromLog(id));
+            patientInfo.put(id, parseFullNameFromLog(id));
+        }
+        return patientInfo;
     }
 
 }
