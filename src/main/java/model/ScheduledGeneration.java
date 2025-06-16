@@ -43,8 +43,8 @@ public class ScheduledGeneration {
 
     private Measurement generateRandom() {
         double temperature = 36.0 + Math.random() * 3;
-        int heartRate = 60 + (int) (Math.random() * 30);
-        int cvp = 5 + (int) (Math.random() * 5);
+        int heartRate = 55 + (int) (Math.random() * 100);
+        int cvp = 2 + (int) (Math.random() * 15);
         System.out.println(new Measurement(temperature, heartRate, cvp));
         return new Measurement(temperature, heartRate, cvp);
     }
