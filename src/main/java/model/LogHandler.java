@@ -9,6 +9,7 @@ import java.nio.file.*;
 import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
+import java.time.LocalTime;
 
 public class LogHandler {
 
@@ -82,7 +83,8 @@ public class LogHandler {
     public void writeMeasurement(Patient patient, Measurement measurement) {
         File logFile = getLogFile(patient.getId());
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(logFile, true))) {
-            writer.write(String.format(Locale.US, "%.1f %d %d%n",
+            writer.write(String.format(Locale.US, "%s %.1f %d %d%n",
+                    measurement.getTimestamp().toString(),
                     measurement.getTemperature(),
                     measurement.getHeartRate(),
                     measurement.getCvp()));
@@ -109,7 +111,9 @@ public class LogHandler {
         if (!logFile.exists()) {
             return new ArrayList<>();
         }
+
         List<Measurement> measurements = new ArrayList<>();
+
         try (BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
             String line;
             boolean firstLineSkipped = false;
@@ -119,23 +123,27 @@ public class LogHandler {
                     firstLineSkipped = true;
                     continue;
                 }
+
                 String[] parts = line.split("\\s+");
-                if (parts.length == 3) {
+                if (parts.length >= 4) { // должно быть: [time] temp hr cvp
                     try {
-                        double temp = Double.parseDouble(parts[0]);
-                        int hr = Integer.parseInt(parts[1]);
-                        int cvp = Integer.parseInt(parts[2]);
-                        measurements.add(new Measurement(temp, hr, cvp));
-                    } catch (NumberFormatException ex) {
+                        LocalTime timestamp = LocalTime.parse(parts[0]);
+                        double temp = Double.parseDouble(parts[1]);
+                        int hr = Integer.parseInt(parts[2]);
+                        int cvp = Integer.parseInt(parts[3]);
+                        measurements.add(new Measurement(temp, hr, cvp, timestamp));
+                    } catch (Exception ex) {
                         System.err.println("Ошибка парсинга строки: " + line);
                         continue;
                     }
                 }
             }
         }
+
         if (measurements.size() < limit) {
             return null;
         }
+
         int startIndex = measurements.size() - limit;
         return new ArrayList<>(measurements.subList(startIndex, measurements.size()));
     }

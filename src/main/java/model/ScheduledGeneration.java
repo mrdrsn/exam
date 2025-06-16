@@ -53,7 +53,7 @@ public class ScheduledGeneration {
     private Measurement generateRealistic() {
         if (lastMeasurement == null) {
             // Начальные значения при первом запуске
-            double temperature = 36.5 + Math.random() * 1.0; // базовая температура
+            double temperature = roundToOneDecimal(36.5 + Math.random() * 1.0); // базовая температура
             int heartRate = 60 + (int) (Math.random() * 30); // нормальный пульс
             int cvp = 5 + (int) (Math.random() * 5); // нормальное ЦВД
 
@@ -61,7 +61,7 @@ public class ScheduledGeneration {
         } else {
             // Маленькие изменения относительно предыдущих значений
             double tempDelta = (Math.random() * 0.2) - 0.1; // ±0.1
-            double temperature = clamp(lastMeasurement.getTemperature() + tempDelta, 36.0, 39.0);
+            double temperature = clamp(roundToOneDecimal(lastMeasurement.getTemperature() + tempDelta), 36.6, 37.2);
 
             int hrDelta = (int) Math.round((Math.random() * 2) - 1); // ±0 или ±1 или ±2
             int heartRate = clamp(lastMeasurement.getHeartRate() + hrDelta, 55, 110);
@@ -74,6 +74,10 @@ public class ScheduledGeneration {
 
         System.out.println(lastMeasurement);
         return lastMeasurement;
+    }
+
+    private double roundToOneDecimal(double value) {
+        return Math.round(value * 10) / 10.0;
     }
 
     private <T extends Comparable<T>> T clamp(T value, T min, T max) {
