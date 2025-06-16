@@ -4,53 +4,61 @@
  */
 package model;
 
-import model.Patient;
-import model.Measurement;
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileReader;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Files;
-import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Locale;
-import java.util.Objects;
+import java.io.*;
+import java.nio.file.*;
+import java.text.MessageFormat;
+import java.util.*;
 import java.util.stream.Collectors;
 
-/**
- *
- * @author Nastya
- */
 public class LogHandler {
 
-    private static final String LOGS_DIR = "logs";
+    private static final String LOGS_DIR_NAME = "logs";
+    private static final Path BASE_DIR;
+
+    // Статический блок для определения BASE_DIR до создания экземпляра
+    static {
+        try {
+            // Получаем путь к JAR-файлу или к классу при запуске из IDE
+            String pathToThisClass = LogHandler.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
+
+            // Убираем начальный '/' на Windows, если он есть
+            if (File.separatorChar == '\\') { // это Windows
+                if (pathToThisClass.startsWith("/")) {
+                    pathToThisClass = pathToThisClass.substring(1);
+                }
+            }
+
+            Path jarPath = Paths.get(pathToThisClass);
+
+            Path jarDir;
+            if (jarPath.toString().endsWith(".jar")) {
+                // Запуск из .jar: получаем директорию, где находится .jar
+                jarDir = jarPath.getParent();
+            } else {
+                // Запуск из IDE: можно использовать текущую директорию или корень проекта
+                jarDir = Paths.get("").toAbsolutePath();
+            }
+
+            BASE_DIR = jarDir.resolve(LOGS_DIR_NAME);
+        } catch (Exception e) {
+            throw new RuntimeException("Не удалось определить базовую директорию", e);
+        }
+    }
 
     public LogHandler() {
         createLogsDirectoryIfNotExists();
     }
 
     private void createLogsDirectoryIfNotExists() {
-        Path path = Paths.get(LOGS_DIR);
-        if (!Files.exists(path)) {
-            try {
-                Files.createDirectory(path);
-            } catch (IOException e) {
-                System.err.println("Не удалось создать директорию для логов: " + e.getMessage());
-            }
+        try {
+            Files.createDirectories(BASE_DIR); // Создаст всю цепочку, если нужно
+        } catch (IOException e) {
+            System.err.println("Не удалось создать директорию для логов: " + e.getMessage());
         }
     }
 
     public boolean createEmptyLogFile(String patientId, String fullName) {
         File logFile = getLogFile(patientId);
-
         try {
             createLogsDirectoryIfNotExists();
             if (!logFile.exists()) {
@@ -60,7 +68,6 @@ public class LogHandler {
                     writer.newLine();
                 }
             }
-
             return true;
         } catch (IOException e) {
             System.err.println("Не удалось создать файл для пациента " + patientId + ": " + e.getMessage());
@@ -69,12 +76,11 @@ public class LogHandler {
     }
 
     public File getLogFile(String patientId) {
-        return new File(LOGS_DIR + File.separator + patientId + ".log");
+        return BASE_DIR.resolve(patientId + ".log").toFile();
     }
 
     public void writeMeasurement(Patient patient, Measurement measurement) {
         File logFile = getLogFile(patient.getId());
-
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(logFile, true))) {
             writer.write(String.format(Locale.US, "%.1f %d %d%n",
                     measurement.getTemperature(),
@@ -87,16 +93,14 @@ public class LogHandler {
 
     public String getPatientNameFromLogFile(String patientId) {
         File logFile = getLogFile(patientId);
-
         try (BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
             String firstLine = reader.readLine();
             if (firstLine != null && firstLine.startsWith("name=")) {
-                return firstLine.substring(5); //обрезаем "name="
+                return firstLine.substring(5); // обрезаем "name="
             }
         } catch (IOException e) {
             System.err.println("Ошибка чтения имени пациента из файла: " + e.getMessage());
         }
-
         return "Без имени";
     }
 
@@ -105,49 +109,42 @@ public class LogHandler {
         if (!logFile.exists()) {
             return new ArrayList<>();
         }
-
+        List<Measurement> measurements = new ArrayList<>();
         try (BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
-            Deque<Measurement> deque = new LinkedList<>();
-
             String line;
             boolean firstLineSkipped = false;
-
             while ((line = reader.readLine()) != null) {
                 line = line.trim();
-
                 if (!firstLineSkipped && line.startsWith("name=")) {
                     firstLineSkipped = true;
                     continue;
                 }
-
                 String[] parts = line.split("\\s+");
                 if (parts.length == 3) {
                     try {
                         double temp = Double.parseDouble(parts[0]);
                         int hr = Integer.parseInt(parts[1]);
                         int cvp = Integer.parseInt(parts[2]);
-                        Measurement m = new Measurement(temp, hr, cvp);
-                        deque.addLast(m);
-                        if (deque.size() > limit) {
-                            deque.pollFirst();
-                        }
+                        measurements.add(new Measurement(temp, hr, cvp));
                     } catch (NumberFormatException ex) {
                         System.err.println("Ошибка парсинга строки: " + line);
                         continue;
                     }
                 }
             }
-
-            return new ArrayList<>(deque);
         }
+        if (measurements.size() < limit) {
+            return null;
+        }
+        int startIndex = measurements.size() - limit;
+        return new ArrayList<>(measurements.subList(startIndex, measurements.size()));
     }
 
     public List<Patient> getAllPatients() {
-        File dir = new File(LOGS_DIR);
+        File dir = BASE_DIR.toFile();
         if (!dir.exists() || !dir.isDirectory()) {
             return Collections.emptyList();
         }
-
         return Arrays.stream(Objects.requireNonNull(dir.listFiles()))
                 .filter(file -> file.getName().endsWith(".log"))
                 .map(file -> {
@@ -159,11 +156,10 @@ public class LogHandler {
     }
 
     public List<String> getAllPatientIds() {
-        File dir = new File(LOGS_DIR);
+        File dir = BASE_DIR.toFile();
         if (!dir.exists() || !dir.isDirectory()) {
             return Collections.emptyList();
         }
-
         return Arrays.stream(Objects.requireNonNull(dir.listFiles()))
                 .filter(file -> file.getName().endsWith(".log"))
                 .map(file -> file.getName().replace(".log", ""))
@@ -171,28 +167,21 @@ public class LogHandler {
     }
 
     public String generateNewPatientId() {
-        File dir = new File(LOGS_DIR);
+        File dir = BASE_DIR.toFile();
         if (!dir.exists() || !dir.isDirectory()) {
             return "P001"; // если нет ни одного файла
         }
-
-        // Получаем список всех файлов пациентов
         File[] files = dir.listFiles((dir1, name) -> name.startsWith("P") && name.matches("P\\d{3}\\.log"));
         if (files == null || files.length == 0) {
             return "P001";
         }
-
-        // Извлекаем номера из названий файлов
         int maxNumber = Arrays.stream(files)
                 .map(file -> file.getName().replace(".log", ""))
                 .map(name -> name.substring(1)) // убираем 'P'
                 .mapToInt(Integer::parseInt)
                 .max()
                 .orElse(0);
-
         int nextNumber = maxNumber + 1;
-
-        // Формируем ID с ведущими нулями
         return String.format("P%03d", nextNumber);
     }
 
@@ -213,15 +202,12 @@ public class LogHandler {
     private String formatShortName(String fullName) {
         String[] parts = fullName.split("\\s+");
         StringBuilder shortName = new StringBuilder(parts[0]); // фамилия
-
         if (parts.length > 1) {
             shortName.append(" ").append(parts[1].charAt(0)).append(".");
         }
-
         if (parts.length > 2) {
             shortName.append(parts[2].charAt(0)).append(".");
         }
-
         return shortName.toString();
     }
 }

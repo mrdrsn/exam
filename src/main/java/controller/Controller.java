@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -23,7 +24,8 @@ public class Controller {
         this.view = view;
         this.generator = new ScheduledGeneration(this::onNewMeasurement);
     }
-    public Controller(){
+
+    public Controller() {
         this.generator = new ScheduledGeneration(this::onNewMeasurement);
     }
 
@@ -39,19 +41,72 @@ public class Controller {
         return generator.isMonitoringActive();
     }
 
-    public void loadPatient(String patientId) throws IOException {
-        String fullName = logHandler.getPatientNameFromLogFile(patientId);
-        System.out.println(fullName);
-        currentPatient = new Patient(patientId, fullName);
-        List<Measurement> lastMeasurements = logHandler.getLastMeasurements(patientId, 10);
+//    public void loadPatient(String patientId) throws IOException {
+//        String fullName = logHandler.getPatientNameFromLogFile(patientId);
+//        System.out.println(fullName);
+//        currentPatient = new Patient(patientId, fullName);
+//        List<Measurement> lastMeasurements = logHandler.getLastMeasurements(patientId, 10);
+//
+//        SwingUtilities.invokeLater(() -> {
+//            view.updateUID(new MeasurementViewModel(
+//                    lastMeasurements.isEmpty() ? 0 : lastMeasurements.get(0).getTemperature(),
+//                    lastMeasurements.isEmpty() ? 0 : lastMeasurements.get(0).getHeartRate(),
+//                    lastMeasurements.isEmpty() ? 0 : lastMeasurements.get(0).getCvp()
+//            ));
+//        });
+//    }
+    public List<String> getTemperaturesFromMeasurements(String patientId) {
+        List<Measurement> measurements = null;
+        try {
+            measurements = logHandler.getLastMeasurements(patientId, 10);
+        } catch (IOException ex) {
+            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (measurements == null) {
+            return null;
+        }
 
-        SwingUtilities.invokeLater(() -> {
-            view.updateUID(new MeasurementViewModel(
-                    lastMeasurements.isEmpty() ? 0 : lastMeasurements.get(0).getTemperature(),
-                    lastMeasurements.isEmpty() ? 0 : lastMeasurements.get(0).getHeartRate(),
-                    lastMeasurements.isEmpty() ? 0 : lastMeasurements.get(0).getCvp()
-            ));
-        });
+        List<String> temperatures = new ArrayList<>();
+        for (Measurement m : measurements) {
+            temperatures.add(String.valueOf(m.getTemperature()));
+        }
+        return temperatures;
+    }
+
+    public List<String> getHeartRateFromMeasurements(String patientId) {
+        List<Measurement> measurements = null;
+        try {
+            measurements = logHandler.getLastMeasurements(patientId, 10);
+        } catch (IOException ex) {
+            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (measurements == null) {
+            return null;
+        }
+
+        List<String> heartRates = new ArrayList<>();
+        for (Measurement m : measurements) {
+            heartRates.add(String.valueOf(m.getHeartRate()));
+        }
+        return heartRates;
+    }
+
+    public List<String> getCvpFromMeasurements(String patientId) {
+        List<Measurement> measurements = null;
+        try {
+            measurements = logHandler.getLastMeasurements(patientId, 10);
+        } catch (IOException ex) {
+            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        if (measurements == null) {
+            return null;
+        }
+
+        List<String> cvps = new ArrayList<>();
+        for (Measurement m : measurements) {
+            cvps.add(String.valueOf(m.getCvp()));
+        }
+        return cvps;
     }
 
     public void startMonitoring() {
@@ -83,6 +138,7 @@ public class Controller {
         }
         //оставить в случае: добавление пациента -> сразу переход на страницу мониторинга
         this.currentPatient = new Patient(id, name);
+        System.out.println("текущий пациент после добавления " + this.currentPatient);
         boolean fileCreated = logHandler.createEmptyLogFile(id, name);
         return fileCreated;
     }
@@ -101,23 +157,33 @@ public class Controller {
     public String generateNewPatientId() {
         return logHandler.generateNewPatientId();
     }
-    public String getPatientNameFromLogFile(String patientId){
+
+    public String getPatientNameFromLogFile(String patientId) {
         return logHandler.getPatientNameFromLogFile(patientId);
     }
-    public String parseFullNameFromLog(String patientId){
+
+    public String parseFullNameFromLog(String patientId) {
         return logHandler.parseFullNameFromLog(patientId);
     }
-    public Map<String,String> getAllPatientFullNames(){
-        Map<String,String> patientInfo = new HashMap<>();
-        
-        
-        List<String> patientFullNames = new ArrayList<>();
+
+    public Map<String, String> getAllPatientFullNames() {
+        Map<String, String> patientInfo = new LinkedHashMap<>(); // <-- здесь ключевое изменение
+
         List<String> patientIds = getAllPatientIds();
-        for(String id: patientIds){
-            patientFullNames.add(parseFullNameFromLog(id));
-            patientInfo.put(id, parseFullNameFromLog(id));
+        for (String id : patientIds) {
+            String fullName = parseFullNameFromLog(id);
+            patientInfo.put(id, fullName); // будет сохранён порядок из patientIds
         }
+
         return patientInfo;
     }
 
+    public List<Measurement> getLastMeasurements(String patientId, int limit) {
+        try {
+            return logHandler.getLastMeasurements(patientId, limit);
+        } catch (IOException ex) {
+            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        return null;
+    }
 }

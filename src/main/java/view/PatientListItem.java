@@ -45,6 +45,10 @@ public class PatientListItem extends JPanel {
             }
         });
     }
+    
+    public JLabel getNameLabel(){
+        return this.nameLabel;
+    }
 
     // Слушатель действий
     private ActionEvent actionEvent;
