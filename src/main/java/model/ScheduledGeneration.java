@@ -8,9 +8,9 @@ import java.util.function.Consumer;
 
 public class ScheduledGeneration {
 
-    private ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
+    private final ScheduledExecutorService scheduler = Executors.newSingleThreadScheduledExecutor();
     private ScheduledFuture<?> task;
-    private Consumer<Measurement> onNewMeasurement;
+    private final Consumer<Measurement> onNewMeasurement;
     private volatile boolean active = false;
     private Measurement lastMeasurement = null;
 
@@ -42,13 +42,6 @@ public class ScheduledGeneration {
         }
     }
 
-    private Measurement generateRandom() {
-        double temperature = 36.0 + Math.random() * 3;
-        int heartRate = 55 + (int) (Math.random() * 100);
-        int cvp = 2 + (int) (Math.random() * 15);
-        System.out.println(new Measurement(temperature, heartRate, cvp));
-        return new Measurement(temperature, heartRate, cvp);
-    }
 
     private Measurement generateRealistic() {
         if (lastMeasurement == null) {

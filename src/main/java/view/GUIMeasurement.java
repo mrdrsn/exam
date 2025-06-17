@@ -188,11 +188,11 @@ public class GUIMeasurement extends JFrame {
 
         JPanel idInfoPanel = new JPanel();
         idInfoPanel.setLayout(new BoxLayout(idInfoPanel, BoxLayout.X_AXIS));
-        alignCustomPanel(idInfoPanel, 500, 43);
+        adjustComponent(idInfoPanel, 500, 43, false);
 
         JPanel leftInfoPanel = new JPanel();
         leftInfoPanel.setLayout(new BoxLayout(leftInfoPanel, BoxLayout.Y_AXIS));
-        alignCustomPanel(leftInfoPanel, 400, 43);
+        adjustComponent(leftInfoPanel, 400, 43, false);
 
         JLabel idInfoLabel1 = new JLabel("Новому пациенту будет присвоен уникальный");
         adjustLabel(idInfoLabel1, fontSF);
@@ -205,7 +205,7 @@ public class GUIMeasurement extends JFrame {
 
         JPanel rightInfoPanel = new JPanel();
         rightInfoPanel.setLayout(new BoxLayout(rightInfoPanel, BoxLayout.Y_AXIS));
-        alignCustomPanel(rightInfoPanel, 100, 43);
+        adjustComponent(rightInfoPanel, 100, 43,false);
 
         JLabel idInfoLabel3 = new JLabel(controller.generateNewPatientId());
         adjustLabel(idInfoLabel3, fontSFSemiBold);
