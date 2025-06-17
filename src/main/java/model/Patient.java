@@ -14,7 +14,6 @@ public class Patient {
     private String name;
     private List<Measurement> measurement;
     
-    //подумать над другим паттерном
     public Patient(String id, String name){
         this.id = id;
         this.name = name;

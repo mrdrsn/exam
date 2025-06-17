@@ -23,11 +23,9 @@ public class PlaceholderTextField extends JTextField {
         super(columns);
         this.placeholder = placeholder;
         this.normalColor = getForeground();
-        // Устанавливаем начальный текст и цвет
         setForeground(placeholderColor);
         super.setText(placeholder);
 
-        // Слушатель фокуса
         this.addFocusListener(new FocusAdapter() {
             @Override
             public void focusGained(FocusEvent e) {
@@ -47,7 +45,6 @@ public class PlaceholderTextField extends JTextField {
         });
     }
 
-    // Переопределяем setText(), чтобы сохранять логику placeholder
     @Override
     public void setText(String text) {
         if (text == null || text.isEmpty() && isFocusLost()) {
@@ -59,17 +56,13 @@ public class PlaceholderTextField extends JTextField {
         }
     }
 
-    // Метод для внутреннего использования
     public void superSetText(String text) {
         super.setText(text);
     }
 
-    // Проверка, пустое ли поле
     private boolean isFocusLost() {
         return !this.hasFocus();
     }
-
-    // Установить другой плейсхолдер
     public void setPlaceholder(String placeholder) {
         this.placeholder = placeholder;
         if (getForeground().equals(placeholderColor)) {

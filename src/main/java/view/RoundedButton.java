@@ -17,15 +17,15 @@ public class RoundedButton extends JButton {
 
     public RoundedButton(String text) {
         super(" " + text);
-        setOpaque(false); // делаем кнопку прозрачной
-        setContentAreaFilled(false); // убираем стандартное заполнение
-        setFocusPainted(false); // убираем пунктир при фокусе
+        setOpaque(false); 
+        setContentAreaFilled(false); 
+        setFocusPainted(false); 
         setBorderPainted(false);
     }
 
     @Override
     protected void paintComponent(Graphics g) {
-        int radius = 20; // радиус скругления
+        int radius = 20; 
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
@@ -42,7 +42,6 @@ public class RoundedButton extends JButton {
 
     @Override
     public boolean contains(int x, int y) {
-        // чтобы клик был только в пределах закруглённой области
         return new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 20, 20).contains(x, y);
     }
 }

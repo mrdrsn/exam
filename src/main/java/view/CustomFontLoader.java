@@ -4,20 +4,16 @@
  */
 package view;
 
-/**
- *
- * @author Nastya
- */
 import java.awt.Font;
 import java.awt.FontFormatException;
 import java.awt.GraphicsEnvironment;
 import java.io.IOException;
 import java.io.InputStream;
-
 /**
  *
- * @author nsoko
+ * @author Nastya
  */
+
 public class CustomFontLoader {
      public static Font loadCustomFont(int size, String fontName) {
         try (InputStream fontStream = CustomFontLoader.class.getClassLoader().getResourceAsStream(fontName)) {

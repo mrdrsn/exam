@@ -8,10 +8,8 @@ package view;
  *
  * @author Nastya
  */
-import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import java.awt.*;
-import java.awt.geom.RoundRectangle2D;
 
 public class RoundedTextField extends PlaceholderTextField {
     private int radius;
@@ -20,7 +18,7 @@ public class RoundedTextField extends PlaceholderTextField {
         super(placeholder, columns);
         this.radius = radius;
         setBorder(new EmptyBorder(4, 8, 4, 8));
-        setOpaque(false); // делаем фон прозрачным
+        setOpaque(false); 
     }
 
     @Override
@@ -28,9 +26,8 @@ public class RoundedTextField extends PlaceholderTextField {
         Graphics2D g2 = (Graphics2D) g.create();
         g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-        // Цвет фона
         if (!isFocusOwner() && getText().equals(getPlaceholder())) {
-            g2.setColor(new Color(240, 240, 240)); // светло-серый фон
+            g2.setColor(new Color(240, 240, 240)); 
         } else {
             g2.setColor(Color.WHITE);
         }

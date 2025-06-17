@@ -13,10 +13,8 @@ import model.MeasurementViewModel;
 import model.Patient;
 import java.awt.event.ActionEvent;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
@@ -34,7 +32,7 @@ import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
 import javax.swing.table.DefaultTableModel;
-import main.java.model.DataCalculations;
+import model.Measurement;
 
 public class GUIMeasurement extends JFrame {
 
@@ -42,7 +40,7 @@ public class GUIMeasurement extends JFrame {
     private JLabel tempLabel = new JLabel("-");
     private JLabel heartRateLabel = new JLabel("-");
     private JLabel cvpLabel = new JLabel("-");
-    private JButton backButton; // кнопка "Назад" для мониторинга
+    private JButton backButton;
 
     private JLabel patientNameLabel;
     private JLabel patientIdLabel;
@@ -76,11 +74,7 @@ public class GUIMeasurement extends JFrame {
     private DefaultTableModel statsTableModel;
 
     private JTable statsTable;
-    private String[] columnNames = {
-        "Среднее", "Мат. ожидание", "Дисперсия", "1 квартиль", "4 квартиль"
-    };
     private String[] rowNames = {"Температура", "Сердцебиение", "ЦВД"};
-    private Object[][] statsData = new Object[3][5];
 
     public GUIMeasurement() {
         this.controller = new Controller(this);
@@ -122,37 +116,17 @@ public class GUIMeasurement extends JFrame {
         backgroundPanel.setLayout(new BoxLayout(backgroundPanel, BoxLayout.X_AXIS));
         JPanel leftPanel = new JPanel();
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
-        leftPanel.setPreferredSize(new Dimension(630, 720));
-        leftPanel.setMaximumSize(leftPanel.getPreferredSize());
-        leftPanel.setMinimumSize(leftPanel.getPreferredSize());
-        leftPanel.setOpaque(false);
-
-        JLabel betaVersionLabel = new JLabel("*Бета версия");
-        betaVersionLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        betaVersionLabel.setHorizontalAlignment(SwingConstants.CENTER);
-        betaVersionLabel.setFont(fontSF);
-
+        adjustComponent(leftPanel, 630, 720, false);
         leftPanel.add(Box.createVerticalStrut(650));
-        leftPanel.add(betaVersionLabel);
 
         JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.X_AXIS));
-        rightPanel.setPreferredSize(new Dimension(650, 720));
-        rightPanel.setMaximumSize(rightPanel.getPreferredSize());
-        rightPanel.setMinimumSize(rightPanel.getPreferredSize());
-        rightPanel.setOpaque(false);
-        rightPanel.setBackground(Color.BLUE);
+        adjustComponent(rightPanel, 650, 720, false);
 
         JPanel check = new JPanel();
-        check.setPreferredSize(new Dimension(145, 720));
-        check.setMaximumSize(check.getPreferredSize());
-        check.setMinimumSize(check.getPreferredSize());
-        check.setOpaque(false);
+        adjustComponent(check, 145, 720, false);
         JPanel check2 = new JPanel();
-        check2.setPreferredSize(new Dimension(145, 720));
-        check2.setMaximumSize(check2.getPreferredSize());
-        check2.setMinimumSize(check2.getPreferredSize());
-        check2.setOpaque(false);
+        adjustComponent(check2, 145, 720, false);
 
         JButton newPatientButton = createCustomButton("Новый пациент", "#ffffff");
         JButton openPatientButton = createCustomButton("Открыть пациента", "#ffffff");
@@ -160,11 +134,8 @@ public class GUIMeasurement extends JFrame {
 
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.Y_AXIS));
-        buttonPanel.setPreferredSize(new Dimension(350, 450));
+        adjustComponent(buttonPanel, 350, 450, false);
         buttonPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
-        buttonPanel.setMaximumSize(buttonPanel.getPreferredSize());
-        buttonPanel.setMinimumSize(buttonPanel.getPreferredSize());
-        buttonPanel.setOpaque(false);
 
         buttonPanel.add(Box.createVerticalStrut(108));
         buttonPanel.add(newPatientButton);
@@ -204,18 +175,12 @@ public class GUIMeasurement extends JFrame {
         Font fontSF = CustomFontLoader.loadCustomFont(16, "fonts/SFProText-Regular.ttf");
         Font fontSFSemiBold = CustomFontLoader.loadCustomFont(24, "fonts/SFProText-Medium.ttf");
 
-        // === Правая панель ===
         JPanel rightPanel = new JPanel();
         rightPanel.setLayout(new BoxLayout(rightPanel, BoxLayout.Y_AXIS));
-        rightPanel.setOpaque(false);
-        rightPanel.setPreferredSize(new Dimension(668, 720));
-        rightPanel.setMaximumSize(rightPanel.getPreferredSize());
-        rightPanel.setMinimumSize(rightPanel.getPreferredSize());
+        adjustComponent(rightPanel, 668, 720, false);
 
         JLabel newPatientLabel = new JLabel("Новый пациент...");
-        newPatientLabel.setFont(fontSFBig);
-        newPatientLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        newPatientLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        adjustLabel(newPatientLabel, fontSFBig);
 
         JTextField enterSurname = createCustomTextField("Фамилия*", 20, 20);
         JTextField enterName = createCustomTextField("Имя*", 20, 20);
@@ -230,14 +195,10 @@ public class GUIMeasurement extends JFrame {
         alignCustomPanel(leftInfoPanel, 400, 43);
 
         JLabel idInfoLabel1 = new JLabel("Новому пациенту будет присвоен уникальный");
-        idInfoLabel1.setFont(fontSF);
-        idInfoLabel1.setAlignmentX(Component.LEFT_ALIGNMENT);
-        idInfoLabel1.setHorizontalAlignment(SwingConstants.LEFT);
+        adjustLabel(idInfoLabel1, fontSF);
 
         JLabel idInfoLabel2 = new JLabel("идентификационный номер:");
-        idInfoLabel2.setFont(fontSF);
-        idInfoLabel2.setAlignmentX(Component.LEFT_ALIGNMENT);
-        idInfoLabel2.setHorizontalAlignment(SwingConstants.LEFT);
+        adjustLabel(idInfoLabel2, fontSF);
 
         leftInfoPanel.add(idInfoLabel1);
         leftInfoPanel.add(idInfoLabel2);
@@ -247,9 +208,7 @@ public class GUIMeasurement extends JFrame {
         alignCustomPanel(rightInfoPanel, 100, 43);
 
         JLabel idInfoLabel3 = new JLabel(controller.generateNewPatientId());
-        idInfoLabel3.setFont(fontSFSemiBold);
-        idInfoLabel3.setAlignmentX(Component.LEFT_ALIGNMENT);
-        idInfoLabel3.setHorizontalAlignment(SwingConstants.LEFT);
+        adjustLabel(idInfoLabel3, fontSFSemiBold);
 
         rightInfoPanel.add(Box.createVerticalStrut(7));
         rightInfoPanel.add(idInfoLabel3);
@@ -264,8 +223,6 @@ public class GUIMeasurement extends JFrame {
             String surname = enterSurname.getText().trim();
             String name = enterName.getText().trim();
             String middleName = enterMiddleName.getText().trim();
-            System.out.println("surname");
-            System.out.println(surname);
             if (surname.equals("Фамилия*") || name.equals("Имя*")) {
                 JOptionPane.showMessageDialog(this,
                         "Пожалуйста, заполните все поля.",
@@ -291,7 +248,6 @@ public class GUIMeasurement extends JFrame {
                         JOptionPane.ERROR_MESSAGE);
             }
             openPatientListUID(controller.getCurrentPatient());
-            System.out.println("текущий пациент внутри контроллера " + controller.getCurrentPatient());
         });
         backToMenuButton.addActionListener((ActionEvent e) -> {
             setupUI();
@@ -363,31 +319,34 @@ public class GUIMeasurement extends JFrame {
 
     private void openPatientListUID(Patient patient) {
         clearContentPane();
-
-        // === Основной контейнер с наложением ===
         JLayeredPane layeredPane = new JLayeredPane();
-        layeredPane.setPreferredSize(new Dimension(1296, 720)); // 1280 + 16 на скроллбар
-        layeredPane.setLayout(null); // ручное позиционирование
+        layeredPane.setPreferredSize(new Dimension(1296, 720));
+        layeredPane.setLayout(null);
 
-        // === Фоновая панель с компонентами ===
         BackgroundPanelStrict backgroundPanel = new BackgroundPanelStrict("/Gradient.jpg", false);
         backgroundPanel.setLayout(new BoxLayout(backgroundPanel, BoxLayout.X_AXIS));
         backgroundPanel.setOpaque(false);
 
         JPanel helperPanel = new JPanel();
-        helperPanel.setPreferredSize(new Dimension(340, 1948));
-        helperPanel.setMinimumSize(helperPanel.getPreferredSize());
-        helperPanel.setMaximumSize(helperPanel.getPreferredSize());
-        helperPanel.setOpaque(false);
+        adjustComponent(helperPanel, 340, 1948, false);
 
         if (patient != null) {
             preparePatientPanel(monitoringPanel);
+            Measurement last = controller.getLastMeasurement();
+            if (last != null) {
+                MeasurementViewModel viewModel = new MeasurementViewModel(
+                        last.getTemperature(),
+                        last.getHeartRate(),
+                        last.getCvp()
+                );
+                updateUID(viewModel);
+            }
+            prepareRecentsPanel();
+            updateStatisticsTable();
+
         }
         monitoringPanel.setLayout(new BoxLayout(monitoringPanel, BoxLayout.Y_AXIS));
-        monitoringPanel.setPreferredSize(new Dimension(940, 1948));
-        monitoringPanel.setMaximumSize(monitoringPanel.getPreferredSize());
-        monitoringPanel.setMinimumSize(monitoringPanel.getPreferredSize());
-        monitoringPanel.setOpaque(false);
+        adjustComponent(monitoringPanel, 940, 1948, false);
 
         backgroundPanel.add(helperPanel);
         backgroundPanel.add(monitoringPanel);
@@ -399,26 +358,17 @@ public class GUIMeasurement extends JFrame {
         monitoringScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         monitoringScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         monitoringScrollPane.getVerticalScrollBar().setUnitIncrement(16);
-
-        // Ensure viewport starts at the top
         monitoringScrollPane.getViewport().setViewPosition(new Point(0, 0));
-
-        // Adjust the background panel to align content at the top
         backgroundPanel.setAlignmentY(Component.TOP_ALIGNMENT);
 
-        // === Левая PNG панель поверх фона ===
         JPanel leftPanel = new BackgroundPanelStrict("/Vector 10 (4).png", false, 0.8f);
         leftPanel.setLayout(new BoxLayout(leftPanel, BoxLayout.Y_AXIS));
         leftPanel.setOpaque(false);
-        leftPanel.setBounds(0, 0, 339, 720); // фиксировано слева поверх фона
+        leftPanel.setBounds(0, 0, 339, 720);
 
         JPanel patientListPanel = new JPanel();
         patientListPanel.setLayout(new BoxLayout(patientListPanel, BoxLayout.Y_AXIS));
-        patientListPanel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        patientListPanel.setPreferredSize(new Dimension(275, 900));
-        patientListPanel.setMinimumSize(new Dimension(275, 900));
-        patientListPanel.setMaximumSize(new Dimension(275, 900));
-        patientListPanel.setOpaque(false);
+        adjustComponent(patientListPanel, 275, 900, false);
 
         JScrollPane patientListScrollPane = new JScrollPane(patientListPanel);
         patientListScrollPane.setBounds(0, 0, 275, 720);
@@ -427,14 +377,13 @@ public class GUIMeasurement extends JFrame {
         patientListScrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
         patientListScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_ALWAYS);
         patientListScrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        patientListScrollPane.setBackground(new Color(0, 0, 0, 0)); // Прозрачный фон
+        patientListScrollPane.setBackground(new Color(0, 0, 0, 0));
 
         patientListScrollPane.setBorder(null);
         JScrollBar verticalScrollBar = patientListScrollPane.getVerticalScrollBar();
         verticalScrollBar.setVisible(false);
 
         patientListScrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_NEVER);
-//        patientListScrollPane.setVisible(false);
         JPanel buttonPanel = new JPanel();
         buttonPanel.setLayout(new BoxLayout(buttonPanel, BoxLayout.X_AXIS));
         buttonPanel.setOpaque(false);
@@ -463,9 +412,8 @@ public class GUIMeasurement extends JFrame {
         createPatientList(patientListPanel);
 
         leftPanel.add(patientListScrollPane);
-        // === Добавляем в слои ===
-        layeredPane.add(monitoringScrollPane, JLayeredPane.DEFAULT_LAYER);      // фон с прокруткой
-        layeredPane.add(leftPanel, JLayeredPane.PALETTE_LAYER);       // PNG поверх
+        layeredPane.add(monitoringScrollPane, JLayeredPane.DEFAULT_LAYER);
+        layeredPane.add(leftPanel, JLayeredPane.PALETTE_LAYER);
 
         setContentPane(layeredPane);
         setTitle("Окно мониторинга");
@@ -495,26 +443,22 @@ public class GUIMeasurement extends JFrame {
 
         JPanel helperPanel = new JPanel();
         helperPanel.setLayout(new BoxLayout(helperPanel, BoxLayout.Y_AXIS));
-        helperPanel.setPreferredSize(new Dimension(50, 1948));
-        helperPanel.setMinimumSize(helperPanel.getPreferredSize());
-        helperPanel.setMaximumSize(helperPanel.getPreferredSize());
-        helperPanel.setOpaque(false);
-
-        monitoringPanel.setPreferredSize(new Dimension(1200, 1948));
-        monitoringPanel.setMaximumSize(monitoringPanel.getPreferredSize());
-        monitoringPanel.setMinimumSize(monitoringPanel.getPreferredSize());
-        monitoringPanel.setOpaque(false);
+        adjustComponent(helperPanel, 50, 1948, false);
+        adjustComponent(monitoringPanel, 1200, 1948, false);
 
         JButton backToSmallButton = createIconButton("/icon_smallscreen.png");
         backToSmallButton.setAlignmentX(Component.CENTER_ALIGNMENT);
         backToSmallButton.addActionListener(e -> {
             backgroundPanel.removeAll();
+            monitoringPanel.removeAll();
+            openPatientListUID(currentPatient);
+            prepareRecentsPanel();
+            updateStatisticsTable();
+
             backgroundPanel.repaint();
             backgroundPanel.revalidate();
-            monitoringPanel.removeAll();
             monitoringPanel.repaint();
             monitoringPanel.revalidate();
-            openPatientListUID(currentPatient);
         });
 
         helperPanel.add(Box.createVerticalStrut(15));
@@ -524,6 +468,18 @@ public class GUIMeasurement extends JFrame {
 
         monitoringPanel.removeAll();
         preparePatientPanel(monitoringPanel);
+        Measurement last = controller.getLastMeasurement();
+        if (last != null) {
+            MeasurementViewModel viewModel = new MeasurementViewModel(
+                    last.getTemperature(),
+                    last.getHeartRate(),
+                    last.getCvp()
+            );
+            updateUID(viewModel);
+        }
+
+        prepareRecentsPanel();
+        updateStatisticsTable();
 
         monitoringPanel.repaint();
         monitoringPanel.revalidate();
@@ -665,8 +621,6 @@ public class GUIMeasurement extends JFrame {
         healTimeTemp.setText(controller.getTimeToRecoveryForTemp());
         healTimeHr.setText(controller.getTimeToRecoveryForHeartRate());
         healTimeCvp.setText(controller.getTimeToRecoveryForCvp());
-        System.out.println("info из updateUID " + controller.getFirstCriticalTempTime(controller.getCurrentPatient().getId()));
-        System.out.println("info из updateUID " + controller.getTimeToRecoveryForTemp());
         updateStatisticsTable();
 
         monitoringPanel.revalidate();
@@ -920,32 +874,18 @@ public class GUIMeasurement extends JFrame {
         recentsPanel.add(Box.createHorizontalStrut(34));
         recentsPanel.add(cvpPanel);
 
-        JLabel otherInfoLabel = new JLabel("Дополнительный функционал. (Скачайте полную версию)");
-        otherInfoLabel.setFont(fontSF);
-        otherInfoLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
-        otherInfoLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        JLabel otherInfoLabel2 = new JLabel("Расчет статистических показателей и фиксация времени исследования!");
-        otherInfoLabel2.setFont(fontSF);
-        otherInfoLabel2.setHorizontalAlignment(SwingConstants.LEFT);
-        otherInfoLabel2.setAlignmentX(Component.LEFT_ALIGNMENT);
-
-        // Start content at the top
-        rightPanel.add(Box.createVerticalStrut(44)); // Only necessary spacing
+        rightPanel.add(Box.createVerticalStrut(44)); 
         rightPanel.add(patientNameLabel);
         rightPanel.add(patientIdLabel);
-        rightPanel.add(Box.createVerticalStrut(44)); // Only necessary spacing
+        rightPanel.add(Box.createVerticalStrut(44)); 
         rightPanel.add(currentHolder);
         rightPanel.add(Box.createVerticalStrut(40));
         rightPanel.add(buttonPanel);
         rightPanel.add(Box.createVerticalStrut(40));
         createExtraData(rightPanel);
-//        rightPanel.add(Box.createVerticalStrut(350));
         rightPanel.add(recentMeasurementsLabel);
         rightPanel.add(Box.createVerticalStrut(40));
         rightPanel.add(recentsPanel);
-        rightPanel.add(Box.createVerticalStrut(40));
-        rightPanel.add(otherInfoLabel);
-        rightPanel.add(otherInfoLabel2);
 
         rightPanel.repaint();
         rightPanel.revalidate();
@@ -1097,16 +1037,18 @@ public class GUIMeasurement extends JFrame {
         statsTable.setRowHeight(30);
         statsTable.getTableHeader().setFont(fontSFMediumS);
         statsTable.setPreferredScrollableViewportSize(new Dimension(1000, 110));
+        
 
         JScrollPane scrollPane = new JScrollPane(statsTable);
-        scrollPane.setPreferredSize(new Dimension(1000, 110));
+        scrollPane.setPreferredSize(new Dimension(1000, 150));
+        scrollPane.setMaximumSize(new Dimension(1000, 150));
+        scrollPane.setMinimumSize(new Dimension(1000, 150));
+        scrollPane.setAlignmentX(Component.LEFT_ALIGNMENT);
         scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
-
         panel.add(Box.createVerticalStrut(50));
         panel.add(statsLabel);
         panel.add(Box.createVerticalStrut(20));
         panel.add(scrollPane);
-
     }
 
     public void updateStatisticsTable() {
@@ -1119,7 +1061,7 @@ public class GUIMeasurement extends JFrame {
         List<List<Double>> all = List.of(temps, hr, cvp);
 
         for (int i = 0; i < all.size(); i++) {
-            
+
             statsTableModel.setValueAt(String.format("%.2f", controller.prepareForCalculations(all, i).getMean()), i, 1);
             statsTableModel.setValueAt(String.format("%.2f", controller.prepareForCalculations(all, i).getExpectedValue()), i, 2);
             statsTableModel.setValueAt(String.format("%.2f", controller.prepareForCalculations(all, i).getVariance()), i, 3);

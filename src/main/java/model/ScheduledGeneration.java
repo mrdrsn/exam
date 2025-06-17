@@ -52,21 +52,19 @@ public class ScheduledGeneration {
 
     private Measurement generateRealistic() {
         if (lastMeasurement == null) {
-            // Начальные значения при первом запуске
-            double temperature = roundToOneDecimal(36.6 + Math.random() * 1.0); // базовая температура
-            int heartRate = 60 + (int) (Math.random() * 30); // нормальный пульс
-            int cvp = 5 + (int) (Math.random() * 5); // нормальное ЦВД
+            double temperature = roundToOneDecimal(36.6 + Math.random() * 1.0);
+            int heartRate = 60 + (int) (Math.random() * 30); 
+            int cvp = 5 + (int) (Math.random() * 5); 
 
             lastMeasurement = new Measurement(temperature, heartRate, cvp);
         } else {
-            // Маленькие изменения относительно предыдущих значений
-            double tempDelta = (Math.random() * 0.2) - 0.1; // ±0.1
+            double tempDelta = (Math.random() * 0.2) - 0.1; 
             double temperature = clamp(roundToOneDecimal(lastMeasurement.getTemperature() + tempDelta), 36.3, 39.2);
 
-            int hrDelta = (int) Math.round((Math.random() * 2) - 1); // ±0 или ±1 или ±2
+            int hrDelta = (int) Math.round((Math.random() * 2) - 1); 
             int heartRate = clamp(lastMeasurement.getHeartRate() + hrDelta, 55, 110);
 
-            int cvpDelta = (int) Math.round((Math.random() * 1) - 0.5); // ±0 или ±1
+            int cvpDelta = (int) Math.round((Math.random() * 1) - 0.5);
             int cvp = clamp(lastMeasurement.getCvp() + cvpDelta, 2, 17);
 
             lastMeasurement = new Measurement(temperature, heartRate, cvp);
@@ -93,4 +91,9 @@ public class ScheduledGeneration {
     public boolean isMonitoringActive() {
         return active;
     }
+
+    public Measurement getLastMeasurement() {
+        return lastMeasurement;
+    }
+
 }

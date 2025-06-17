@@ -16,7 +16,7 @@ public class LogHandler {
     private static final String LOGS_DIR_NAME = "logs";
     private static final Path BASE_DIR;
 
-    // Статический блок для определения BASE_DIR до создания экземпляра
+    //Статический блок для определения BASE_DIR до создания экземпляра
     static {
         try {
             String pathToThisClass = LogHandler.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();

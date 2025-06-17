@@ -15,14 +15,14 @@ public class BackgroundPanel extends JPanel {
 
     public BackgroundPanel(String imagePath, boolean preserveAspectRatio) {
         this.preserveAspectRatio = preserveAspectRatio;
-        ImageIcon imageIcon = new ImageIcon(getClass().getResource(imagePath)); // getResource() может вернуть null!
+        ImageIcon imageIcon = new ImageIcon(getClass().getResource(imagePath));
         
         if (imageIcon.getImageLoadStatus() == MediaTracker.ERRORED) {
             System.err.println("Ошибка загрузки изображения: " + imagePath);
         }
 
         this.backgroundImage = imageIcon.getImage();
-        setOpaque(false); // делаем панель прозрачной
+        setOpaque(false); 
     }
 
     @Override
@@ -66,6 +66,6 @@ public class BackgroundPanel extends JPanel {
         if (backgroundImage != null) {
             return new Dimension(backgroundImage.getWidth(null), backgroundImage.getHeight(null));
         }
-        return new Dimension(800, 600); // запасной размер
+        return new Dimension(800, 600); 
     }
 }

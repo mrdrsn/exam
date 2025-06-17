@@ -26,7 +26,6 @@ public class Controller {
     private LocalTime firstCriticalHeartRateTime;
     private LocalTime firstCriticalCvpTime;
 
-    // Хранение времени окончания критических состояний
     private LocalTime recoveryTempTime;
     private LocalTime recoveryHeartRateTime;
     private LocalTime recoveryCvpTime;
@@ -49,9 +48,10 @@ public class Controller {
         this.generator = new ScheduledGeneration(this::onNewMeasurement);
     }
 
-    public void start(){
+    public void start() {
         view = new GUIMeasurement();
     }
+
     public void setPatient(Patient patient) {
         this.currentPatient = patient;
         resetCriticalTimes();
@@ -59,6 +59,10 @@ public class Controller {
 
     public Patient getCurrentPatient() {
         return currentPatient;
+    }
+
+    public Measurement getLastMeasurement() {
+        return generator.getLastMeasurement();
     }
 
     public boolean isMonitoringActive() {
@@ -135,7 +139,6 @@ public class Controller {
             Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
         }
 
-        // Проверяем только что добавленное измерение
         checkAndSetCriticalTimes(m);
 
         MeasurementViewModel viewModel = new MeasurementViewModel(
@@ -150,15 +153,13 @@ public class Controller {
     private void checkAndSetCriticalTimes(Measurement m) {
         LocalTime timestamp = m.getTimestamp();
 
-        // Температура
         if (m.getTemperature() >= 37.0) {
             if (firstCriticalTempTime == null) {
                 firstCriticalTempTime = timestamp;
             }
-            recoveryTempTime = null; // пока в критическом режиме
+            recoveryTempTime = null; 
         } else {
             if (firstCriticalTempTime != null) {
-                // Зафиксировано восстановление
                 lastTempStart = firstCriticalTempTime;
                 lastTempRecovery = timestamp;
                 firstCriticalTempTime = null;
@@ -166,7 +167,6 @@ public class Controller {
             }
         }
 
-        // Сердцебиение
         int hr = m.getHeartRate();
         if (hr < 60 || hr > 110) {
             if (firstCriticalHeartRateTime == null) {
@@ -182,7 +182,6 @@ public class Controller {
             }
         }
 
-        // ЦВД
         int cvp = m.getCvp();
         if (cvp < 5 || cvp > 12) {
             if (firstCriticalCvpTime == null) {
@@ -239,7 +238,6 @@ public class Controller {
         return time != null ? time.format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss")) : null;
     }
 
-    // Метод сброса критических значений при переходе к другому пациенту
     public void resetCriticalTimes() {
         firstCriticalTempTime = null;
         firstCriticalHeartRateTime = null;
@@ -250,7 +248,6 @@ public class Controller {
         if (id == null || id.trim().isEmpty() || name == null || name.trim().isEmpty()) {
             return false;
         }
-        //оставить в случае: добавление пациента -> сразу переход на страницу мониторинга
         this.currentPatient = new Patient(id, name);
         System.out.println("текущий пациент после добавления " + this.currentPatient);
         boolean fileCreated = logHandler.createEmptyLogFile(id, name);
@@ -274,12 +271,12 @@ public class Controller {
     }
 
     public Map<String, String> getAllPatientFullNames() {
-        Map<String, String> patientInfo = new LinkedHashMap<>(); // <-- здесь ключевое изменение
+        Map<String, String> patientInfo = new LinkedHashMap<>(); 
 
         List<String> patientIds = getAllPatientIds();
         for (String id : patientIds) {
             String fullName = parseFullNameFromLog(id);
-            patientInfo.put(id, fullName); // будет сохранён порядок из patientIds
+            patientInfo.put(id, fullName);
         }
 
         return patientInfo;
@@ -293,80 +290,24 @@ public class Controller {
         }
         return null;
     }
-    
-    //ВРЕМЕННо!!
-    public LogHandler getLogHandler(){
+
+    public LogHandler getLogHandler() {
         return this.logHandler;
     }
-    public List<Double> getAllTemperatures(String patientId){
+
+    public List<Double> getAllTemperatures(String patientId) {
         return logHandler.getAllTemperatures(patientId);
     }
-    public List<Double> getAllHeartRates(String patientId){
+
+    public List<Double> getAllHeartRates(String patientId) {
         return logHandler.getAllHeartRates(patientId);
     }
-    public List<Double> getAllCvp(String patientId){
+
+    public List<Double> getAllCvp(String patientId) {
         return logHandler.getAllCvp(patientId);
     }
-    public DataCalculations prepareForCalculations(List<List<Double>> all, int i){
+
+    public DataCalculations prepareForCalculations(List<List<Double>> all, int i) {
         return new DataCalculations(all.get(i));
     }
-
-//    public String getFirstCriticalTempTime(String patientId) {
-//        List<Measurement> measurements = null;
-//        try {
-//            measurements = logHandler.getLastMeasurements(patientId, 100); // берем достаточно записей
-//        } catch (IOException ex) {
-//            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        if (measurements == null || measurements.isEmpty()) {
-//            return null;
-//        }
-//
-//        for (Measurement m : measurements) {
-//            if (m.getTemperature() >= 37.0) {
-//                return m.getTimestamp().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
-//            }
-//        }
-//        return null;
-//    }
-//
-//    public String getFirstCriticalHeartRateTime(String patientId) {
-//        List<Measurement> measurements = null;
-//        try {
-//            measurements = logHandler.getLastMeasurements(patientId, 100);
-//        } catch (IOException ex) {
-//            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        if (measurements == null || measurements.isEmpty()) {
-//            return null;
-//        }
-//
-//        for (Measurement m : measurements) {
-//            int hr = m.getHeartRate();
-//            if (hr < 60 || hr > 110) {
-//                return m.getTimestamp().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
-//            }
-//        }
-//        return null;
-//    }
-//
-//    public String getFirstCriticalCvpTime(String patientId) {
-//        List<Measurement> measurements = null;
-//        try {
-//            measurements = logHandler.getLastMeasurements(patientId, 100);
-//        } catch (IOException ex) {
-//            Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        if (measurements == null || measurements.isEmpty()) {
-//            return null;
-//        }
-//
-//        for (Measurement m : measurements) {
-//            int cvp = m.getCvp();
-//            if (cvp < 5 || cvp > 12) {
-//                return m.getTimestamp().format(java.time.format.DateTimeFormatter.ofPattern("HH:mm:ss"));
-//            }
-//        }
-//        return null;
-//    }
 }

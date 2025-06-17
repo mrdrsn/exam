@@ -1,7 +1,4 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
+
 package main.java.model;
 
 import org.apache.commons.math3.stat.descriptive.DescriptiveStatistics;
@@ -20,11 +17,11 @@ public class DataCalculations {
     }
 
     public double getMean() {
-        return stats.getMean(); // Среднее арифметическое
+        return stats.getMean(); 
     }
 
     public double getExpectedValue() {
-        return stats.getMean(); // Мат. ожидание = среднее для равновероятных данных
+        return stats.getMean(); 
     }
 
     public double getVariance() {
