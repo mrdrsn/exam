@@ -19,11 +19,9 @@ public class LogHandler {
     // Статический блок для определения BASE_DIR до создания экземпляра
     static {
         try {
-            // Получаем путь к JAR-файлу или к классу при запуске из IDE
             String pathToThisClass = LogHandler.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
 
-            // Убираем начальный '/' на Windows, если он есть
-            if (File.separatorChar == '\\') { // это Windows
+            if (File.separatorChar == '\\') {
                 if (pathToThisClass.startsWith("/")) {
                     pathToThisClass = pathToThisClass.substring(1);
                 }
@@ -33,10 +31,8 @@ public class LogHandler {
 
             Path jarDir;
             if (jarPath.toString().endsWith(".jar")) {
-                // Запуск из .jar: получаем директорию, где находится .jar
                 jarDir = jarPath.getParent();
             } else {
-                // Запуск из IDE: можно использовать текущую директорию или корень проекта
                 jarDir = Paths.get("").toAbsolutePath();
             }
 
@@ -52,7 +48,7 @@ public class LogHandler {
 
     private void createLogsDirectoryIfNotExists() {
         try {
-            Files.createDirectories(BASE_DIR); // Создаст всю цепочку, если нужно
+            Files.createDirectories(BASE_DIR);
         } catch (IOException e) {
             System.err.println("Не удалось создать директорию для логов: " + e.getMessage());
         }
@@ -98,7 +94,7 @@ public class LogHandler {
         try (BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
             String firstLine = reader.readLine();
             if (firstLine != null && firstLine.startsWith("name=")) {
-                return firstLine.substring(5); // обрезаем "name="
+                return firstLine.substring(5);
             }
         } catch (IOException e) {
             System.err.println("Ошибка чтения имени пациента из файла: " + e.getMessage());
@@ -125,7 +121,7 @@ public class LogHandler {
                 }
 
                 String[] parts = line.split("\\s+");
-                if (parts.length >= 4) { // должно быть: [time] temp hr cvp
+                if (parts.length >= 4) {
                     try {
                         LocalTime timestamp = LocalTime.parse(parts[0]);
                         double temp = Double.parseDouble(parts[1]);
@@ -148,21 +144,6 @@ public class LogHandler {
         return new ArrayList<>(measurements.subList(startIndex, measurements.size()));
     }
 
-    public List<Patient> getAllPatients() {
-        File dir = BASE_DIR.toFile();
-        if (!dir.exists() || !dir.isDirectory()) {
-            return Collections.emptyList();
-        }
-        return Arrays.stream(Objects.requireNonNull(dir.listFiles()))
-                .filter(file -> file.getName().endsWith(".log"))
-                .map(file -> {
-                    String patientId = file.getName().replace(".log", "");
-                    String fullName = getPatientNameFromLogFile(patientId);
-                    return new Patient(patientId, fullName);
-                })
-                .collect(Collectors.toList());
-    }
-
     public List<String> getAllPatientIds() {
         File dir = BASE_DIR.toFile();
         if (!dir.exists() || !dir.isDirectory()) {
@@ -177,7 +158,7 @@ public class LogHandler {
     public String generateNewPatientId() {
         File dir = BASE_DIR.toFile();
         if (!dir.exists() || !dir.isDirectory()) {
-            return "P001"; // если нет ни одного файла
+            return "P001";
         }
         File[] files = dir.listFiles((dir1, name) -> name.startsWith("P") && name.matches("P\\d{3}\\.log"));
         if (files == null || files.length == 0) {
@@ -185,7 +166,7 @@ public class LogHandler {
         }
         int maxNumber = Arrays.stream(files)
                 .map(file -> file.getName().replace(".log", ""))
-                .map(name -> name.substring(1)) // убираем 'P'
+                .map(name -> name.substring(1))
                 .mapToInt(Integer::parseInt)
                 .max()
                 .orElse(0);
@@ -198,7 +179,7 @@ public class LogHandler {
         try (BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
             String firstLine = reader.readLine();
             if (firstLine != null && firstLine.startsWith("name=")) {
-                String fullName = firstLine.substring(5).trim(); // обрезаем "name="
+                String fullName = firstLine.substring(5).trim();
                 return formatShortName(fullName);
             }
         } catch (IOException e) {
@@ -209,7 +190,7 @@ public class LogHandler {
 
     private String formatShortName(String fullName) {
         String[] parts = fullName.split("\\s+");
-        StringBuilder shortName = new StringBuilder(parts[0]); // фамилия
+        StringBuilder shortName = new StringBuilder(parts[0]);
         if (parts.length > 1) {
             shortName.append(" ").append(parts[1].charAt(0)).append(".");
         }
@@ -218,4 +199,55 @@ public class LogHandler {
         }
         return shortName.toString();
     }
+
+    public List<Double> getAllTemperatures(String patientId) {
+        return getAllMeasurements(patientId).stream()
+                .map(Measurement::getTemperature)
+                .collect(Collectors.toList());
+    }
+
+    public List<Double> getAllHeartRates(String patientId) {
+        return getAllMeasurements(patientId).stream()
+                .map(m -> (double) m.getHeartRate())
+                .collect(Collectors.toList());
+    }
+
+    public List<Double> getAllCvp(String patientId) {
+        return getAllMeasurements(patientId).stream()
+                .map(m -> (double) m.getCvp())
+                .collect(Collectors.toList());
+    }
+
+    private List<Measurement> getAllMeasurements(String patientId) {
+        File logFile = getLogFile(patientId);
+        List<Measurement> measurements = new ArrayList<>();
+
+        try (BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
+            String line;
+            boolean firstLineSkipped = false;
+            while ((line = reader.readLine()) != null) {
+                if (!firstLineSkipped && line.startsWith("name=")) {
+                    firstLineSkipped = true;
+                    continue;
+                }
+                String[] parts = line.trim().split("\\s+");
+                if (parts.length >= 4) {
+                    try {
+                        LocalTime timestamp = LocalTime.parse(parts[0]);
+                        double temp = Double.parseDouble(parts[1]);
+                        int hr = Integer.parseInt(parts[2]);
+                        int cvp = Integer.parseInt(parts[3]);
+                        measurements.add(new Measurement(temp, hr, cvp, timestamp));
+                    } catch (Exception e) {
+                        System.err.println("Ошибка чтения строки: " + line);
+                    }
+                }
+            }
+        } catch (IOException e) {
+            System.err.println("Ошибка чтения лог-файла: " + e.getMessage());
+        }
+
+        return measurements;
+    }
+
 }

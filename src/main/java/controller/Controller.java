@@ -11,6 +11,7 @@ import java.util.Map;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.SwingUtilities;
+import main.java.model.DataCalculations;
 import model.*;
 import view.GUIMeasurement;
 
@@ -24,12 +25,20 @@ public class Controller {
     private LocalTime firstCriticalTempTime;
     private LocalTime firstCriticalHeartRateTime;
     private LocalTime firstCriticalCvpTime;
-    
-        // Хранение времени окончания критических состояний
+
+    // Хранение времени окончания критических состояний
     private LocalTime recoveryTempTime;
     private LocalTime recoveryHeartRateTime;
     private LocalTime recoveryCvpTime;
-    private static final double EPSILON = 0.00001;
+
+    private LocalTime lastTempStart;
+    private LocalTime lastTempRecovery;
+
+    private LocalTime lastHrStart;
+    private LocalTime lastHrRecovery;
+
+    private LocalTime lastCvpStart;
+    private LocalTime lastCvpRecovery;
 
     public Controller(GUIMeasurement view) {
         this.view = view;
@@ -40,6 +49,9 @@ public class Controller {
         this.generator = new ScheduledGeneration(this::onNewMeasurement);
     }
 
+    public void start(){
+        view = new GUIMeasurement();
+    }
     public void setPatient(Patient patient) {
         this.currentPatient = patient;
         resetCriticalTimes();
@@ -139,27 +151,76 @@ public class Controller {
         LocalTime timestamp = m.getTimestamp();
 
         // Температура
-        if (m.getTemperature() >= 37.0 && firstCriticalTempTime == null) {
-            firstCriticalTempTime = timestamp;
-        } else if (m.getTemperature() < 37.0 && firstCriticalTempTime != null) {
-            firstCriticalTempTime = null;
+        if (m.getTemperature() >= 37.0) {
+            if (firstCriticalTempTime == null) {
+                firstCriticalTempTime = timestamp;
+            }
+            recoveryTempTime = null; // пока в критическом режиме
+        } else {
+            if (firstCriticalTempTime != null) {
+                // Зафиксировано восстановление
+                lastTempStart = firstCriticalTempTime;
+                lastTempRecovery = timestamp;
+                firstCriticalTempTime = null;
+                recoveryTempTime = timestamp;
+            }
         }
 
         // Сердцебиение
         int hr = m.getHeartRate();
-        if ((hr < 60 || hr > 110) && firstCriticalHeartRateTime == null) {
-            firstCriticalHeartRateTime = timestamp;
-        } else if ( hr >=60 || hr <= 110 && firstCriticalHeartRateTime != null){
-            firstCriticalHeartRateTime = null;
+        if (hr < 60 || hr > 110) {
+            if (firstCriticalHeartRateTime == null) {
+                firstCriticalHeartRateTime = timestamp;
+            }
+            recoveryHeartRateTime = null;
+        } else {
+            if (firstCriticalHeartRateTime != null) {
+                lastHrStart = firstCriticalHeartRateTime;
+                lastHrRecovery = timestamp;
+                firstCriticalHeartRateTime = null;
+                recoveryHeartRateTime = timestamp;
+            }
         }
 
         // ЦВД
         int cvp = m.getCvp();
-        if ((cvp < 5 || cvp > 12) && firstCriticalCvpTime == null) {
-            firstCriticalCvpTime = timestamp;
-        } else if ( cvp >= 5 || cvp <=12 && firstCriticalCvpTime != null){
-            firstCriticalCvpTime = null;
+        if (cvp < 5 || cvp > 12) {
+            if (firstCriticalCvpTime == null) {
+                firstCriticalCvpTime = timestamp;
+            }
+            recoveryCvpTime = null;
+        } else {
+            if (firstCriticalCvpTime != null) {
+                lastCvpStart = firstCriticalCvpTime;
+                lastCvpRecovery = timestamp;
+                firstCriticalCvpTime = null;
+                recoveryCvpTime = timestamp;
+            }
         }
+    }
+
+    public String getTimeToRecoveryForTemp() {
+        if (lastTempStart != null && lastTempRecovery != null) {
+            long seconds = java.time.Duration.between(lastTempStart, lastTempRecovery).getSeconds();
+            return String.valueOf(seconds);
+        }
+        return null;
+    }
+
+    public String getTimeToRecoveryForHeartRate() {
+        if (lastHrStart != null && lastHrRecovery != null) {
+            long seconds = java.time.Duration.between(lastHrStart, lastHrRecovery).getSeconds();
+            return String.valueOf(seconds);
+        }
+        return null;
+    }
+
+    public String getTimeToRecoveryForCvp() {
+        if (lastCvpStart != null && lastCvpRecovery != null) {
+            long seconds = java.time.Duration.between(lastCvpStart, lastCvpRecovery).getSeconds();
+            return String.valueOf(seconds);
+        }
+        return null;
     }
 
     public String getFirstCriticalTempTime(String patientId) {
@@ -194,13 +255,6 @@ public class Controller {
         System.out.println("текущий пациент после добавления " + this.currentPatient);
         boolean fileCreated = logHandler.createEmptyLogFile(id, name);
         return fileCreated;
-    }
-
-    public void printAllPatients() {
-        List<Patient> patients = logHandler.getAllPatients();
-        for (Patient p : patients) {
-            System.out.println(p.getId() + " — " + p.getFullName());
-        }
     }
 
     public List<String> getAllPatientIds() {
@@ -238,6 +292,23 @@ public class Controller {
             Logger.getLogger(Controller.class.getName()).log(Level.SEVERE, null, ex);
         }
         return null;
+    }
+    
+    //ВРЕМЕННо!!
+    public LogHandler getLogHandler(){
+        return this.logHandler;
+    }
+    public List<Double> getAllTemperatures(String patientId){
+        return logHandler.getAllTemperatures(patientId);
+    }
+    public List<Double> getAllHeartRates(String patientId){
+        return logHandler.getAllHeartRates(patientId);
+    }
+    public List<Double> getAllCvp(String patientId){
+        return logHandler.getAllCvp(patientId);
+    }
+    public DataCalculations prepareForCalculations(List<List<Double>> all, int i){
+        return new DataCalculations(all.get(i));
     }
 
 //    public String getFirstCriticalTempTime(String patientId) {

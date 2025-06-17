@@ -17,6 +17,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import javax.swing.BorderFactory;
 import javax.swing.Box;
 import javax.swing.BoxLayout;
 import javax.swing.ImageIcon;
@@ -29,8 +30,11 @@ import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollBar;
 import javax.swing.JScrollPane;
+import javax.swing.JTable;
 import javax.swing.JTextField;
 import javax.swing.SwingConstants;
+import javax.swing.table.DefaultTableModel;
+import main.java.model.DataCalculations;
 
 public class GUIMeasurement extends JFrame {
 
@@ -64,10 +68,19 @@ public class GUIMeasurement extends JFrame {
     private JLabel nonStandartTimeTemp;
     private JLabel nonStandartTimeHr;
     private JLabel nonStandartTimeCvp;
-    
+
     private JLabel healTimeTemp;
     private JLabel healTimeHr;
     private JLabel healTimeCvp;
+
+    private DefaultTableModel statsTableModel;
+
+    private JTable statsTable;
+    private String[] columnNames = {
+        "Среднее", "Мат. ожидание", "Дисперсия", "1 квартиль", "4 квартиль"
+    };
+    private String[] rowNames = {"Температура", "Сердцебиение", "ЦВД"};
+    private Object[][] statsData = new Object[3][5];
 
     public GUIMeasurement() {
         this.controller = new Controller(this);
@@ -649,7 +662,13 @@ public class GUIMeasurement extends JFrame {
         nonStandartTimeTemp.setText(controller.getFirstCriticalTempTime(controller.getCurrentPatient().getId()));
         nonStandartTimeHr.setText(controller.getFirstCriticalHeartRateTime(controller.getCurrentPatient().getId()));
         nonStandartTimeCvp.setText(controller.getFirstCriticalCvpTime(controller.getCurrentPatient().getId()));
+        healTimeTemp.setText(controller.getTimeToRecoveryForTemp());
+        healTimeHr.setText(controller.getTimeToRecoveryForHeartRate());
+        healTimeCvp.setText(controller.getTimeToRecoveryForCvp());
         System.out.println("info из updateUID " + controller.getFirstCriticalTempTime(controller.getCurrentPatient().getId()));
+        System.out.println("info из updateUID " + controller.getTimeToRecoveryForTemp());
+        updateStatisticsTable();
+
         monitoringPanel.revalidate();
         monitoringPanel.repaint();
     }
@@ -939,9 +958,8 @@ public class GUIMeasurement extends JFrame {
         Font fontSF = CustomFontLoader.loadCustomFont(16, "fonts/SFProText-Regular.ttf");
 
         JPanel timePanel = new JPanel();
-//        timePanel.setLayout(new BoxLayout(timePanel, BoxLayout.Y_AXIS));
         timePanel.setLayout(new GridLayout(1, 2));
-        adjustComponent(timePanel, 1200, 350, false);
+        adjustComponent(timePanel, 1200, 250, false);
 
         JPanel nonStandartPanel = new JPanel();
         nonStandartPanel.setOpaque(false);
@@ -1021,25 +1039,25 @@ public class GUIMeasurement extends JFrame {
         healTimeTempPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         adjustComponent(healTimeTempPanel, 420, 35, true);
 
-        healTimeTemp = new JLabel("heal time temp"); //ubrat
+        healTimeTemp = new JLabel();
         healTimeTemp.setFont(fontSFMediumS);
 
         healTimeTempPanel.add(healTimeTemp);
- 
+
         JPanel healTimeHrPanel = new JPanel();
         healTimeHrPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         adjustComponent(healTimeHrPanel, 420, 35, true);
 
-        healTimeHr = new JLabel("heal time hr"); //ubrat
+        healTimeHr = new JLabel();
         healTimeHr.setFont(fontSFMediumS);
 
         healTimeHrPanel.add(healTimeHr);
-        
+
         JPanel healTimeCvpPanel = new JPanel();
         healTimeCvpPanel.setLayout(new FlowLayout(FlowLayout.LEFT));
         adjustComponent(healTimeCvpPanel, 420, 35, true);
 
-        healTimeCvp = new JLabel("heal time cvp"); //ubrat
+        healTimeCvp = new JLabel();
         healTimeCvp.setFont(fontSFMediumS);
 
         healTimeCvpPanel.add(healTimeCvp);
@@ -1054,8 +1072,60 @@ public class GUIMeasurement extends JFrame {
 
         timePanel.add(nonStandartPanel);
         timePanel.add(healTimePanel);
-//        timePanel.add(labelPanel);
         panel.add(timePanel);
+        JLabel statsLabel = new JLabel("Статистические показатели");
+        statsLabel.setFont(fontSFMediumT);
+        statsLabel.setAlignmentX(Component.LEFT_ALIGNMENT);
+        statsLabel.setHorizontalAlignment(SwingConstants.LEFT);
+
+        String[] extendedColumns = {"Показатель", "Среднее", "Мат. ожидание", "Дисперсия", "1 квартиль", "4 квартиль"};
+        Object[][] initialData = {
+            {"Температура", "-", "-", "-", "-", "-"},
+            {"Сердцебиение", "-", "-", "-", "-", "-"},
+            {"ЦВД", "-", "-", "-", "-", "-"}
+        };
+
+        statsTableModel = new DefaultTableModel(initialData, extendedColumns) {
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return false;
+            }
+        };
+
+        statsTable = new JTable(statsTableModel);
+        statsTable.setFont(fontSF);
+        statsTable.setRowHeight(30);
+        statsTable.getTableHeader().setFont(fontSFMediumS);
+        statsTable.setPreferredScrollableViewportSize(new Dimension(1000, 110));
+
+        JScrollPane scrollPane = new JScrollPane(statsTable);
+        scrollPane.setPreferredSize(new Dimension(1000, 110));
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 0, 0, 0));
+
+        panel.add(Box.createVerticalStrut(50));
+        panel.add(statsLabel);
+        panel.add(Box.createVerticalStrut(20));
+        panel.add(scrollPane);
+
+    }
+
+    public void updateStatisticsTable() {
+        String patientId = controller.getCurrentPatient().getId();
+
+        List<Double> temps = controller.getAllTemperatures(patientId);
+        List<Double> hr = controller.getAllHeartRates(patientId);
+        List<Double> cvp = controller.getAllCvp(patientId);
+
+        List<List<Double>> all = List.of(temps, hr, cvp);
+
+        for (int i = 0; i < all.size(); i++) {
+            
+            statsTableModel.setValueAt(String.format("%.2f", controller.prepareForCalculations(all, i).getMean()), i, 1);
+            statsTableModel.setValueAt(String.format("%.2f", controller.prepareForCalculations(all, i).getExpectedValue()), i, 2);
+            statsTableModel.setValueAt(String.format("%.2f", controller.prepareForCalculations(all, i).getVariance()), i, 3);
+            statsTableModel.setValueAt(String.format("%.2f", controller.prepareForCalculations(all, i).getFirstQuartile()), i, 4);
+            statsTableModel.setValueAt(String.format("%.2f", controller.prepareForCalculations(all, i).getFourthQuartile()), i, 5);
+        }
     }
 
     private void adjustLabel(JLabel label, Font font) {
