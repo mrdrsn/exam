@@ -8,11 +8,23 @@ import javax.swing.*;
 import java.awt.*;
 
 
-
+/**
+ * Панель с пользовательским фоновым изображением.
+ * Поддерживает отрисовку фона с возможностью сохранения пропорций изображения.
+ *
+ * @author Nastya
+ */
 public class BackgroundPanel extends JPanel {
     private Image backgroundImage;
     private boolean preserveAspectRatio;
 
+    /**
+     * Создаёт новую панель с указанным фоновым изображением.
+     *
+     * @param imagePath путь к изображению, относительно корня classpath
+     * @param preserveAspectRatio если true — изображение будет масштабироваться с сохранением пропорций,
+     *                            если false — растягивается на всю панель
+     */
     public BackgroundPanel(String imagePath, boolean preserveAspectRatio) {
         this.preserveAspectRatio = preserveAspectRatio;
         ImageIcon imageIcon = new ImageIcon(getClass().getResource(imagePath));
@@ -25,6 +37,12 @@ public class BackgroundPanel extends JPanel {
         setOpaque(false); 
     }
 
+    /**
+     * Переопределённый метод для отрисовки фонового изображения.
+     * Вызывается автоматически при перерисовке компонента.
+     *
+     * @param g графический контекст для отрисовки
+     */
     @Override
     protected void paintComponent(Graphics g) {
         super.paintComponent(g);
@@ -41,6 +59,14 @@ public class BackgroundPanel extends JPanel {
         }
     }
 
+    /**
+     * Рисует изображение с сохранением пропорций, центрируя его внутри панели.
+     *
+     * @param g2d двумерный графический контекст
+     * @param img изображение для отрисовки
+     * @param panelWidth ширина панели
+     * @param panelHeight высота панели
+     */
     private void drawPreservingAspect(Graphics2D g2d, Image img, int panelWidth, int panelHeight) {
         int imgWidth = img.getWidth(this);
         int imgHeight = img.getHeight(this);
@@ -61,6 +87,12 @@ public class BackgroundPanel extends JPanel {
         g2d.drawImage(img, x, y, scaledWidth, scaledHeight, this);
     }
 
+    /**
+     * Возвращает предпочтительный размер панели, равный размеру фонового изображения.
+     * Если изображение не загружено, возвращает стандартный размер 800x600.
+     *
+     * @return объект типа Dimension с предпочтительным размером
+     */
     @Override
     public Dimension getPreferredSize() {
         if (backgroundImage != null) {

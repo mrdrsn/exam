@@ -4,10 +4,6 @@
  */
 package view;
 
-/**
- *
- * @author Nastya
- */
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -15,12 +11,24 @@ import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
 import java.awt.event.MouseEvent;
 
+/**
+ * Компонент, представляющий отдельную запись пациента в списке.
+ * Отображает иконку и имя пациента, поддерживает обработку кликов мыши и уведомление слушателей.
+ *
+ * @author Nastya
+ */
 public class PatientListItem extends JPanel {
 
     private JLabel iconLabel;
     private JLabel nameLabel;
     private boolean isSelected = false;
 
+    /**
+     * Создаёт новый элемент списка пациентов с указанным именем.
+     * Инициализирует интерфейс: добавляет иконку пользователя и имя пациента.
+     *
+     * @param fullName полное имя пациента (например, "Иванов И.И.")
+     */
     public PatientListItem(String fullName) {
         setLayout(new FlowLayout(FlowLayout.LEFT, 5, 0)); // выравнивание по левому краю, небольшой отступ
         setOpaque(false); // прозрачный фон
@@ -45,8 +53,14 @@ public class PatientListItem extends JPanel {
             }
         });
     }
-    
-    public JLabel getNameLabel(){
+
+    /**
+     * Возвращает метку с именем пациента.
+     * Может использоваться для изменения текста или стиля имени динамически.
+     *
+     * @return объект типа {@link JLabel}, содержащий имя пациента
+     */
+    public JLabel getNameLabel() {
         return this.nameLabel;
     }
 
@@ -54,14 +68,28 @@ public class PatientListItem extends JPanel {
     private ActionEvent actionEvent;
     private ActionListener actionListener;
 
+    /**
+     * Добавляет указанного слушателя событий действия.
+     *
+     * @param listener слушатель, который будет уведомлен о клике по элементу
+     */
     public void addActionListener(ActionListener listener) {
         actionListener = AWTEventMulticaster.add(actionListener, listener);
     }
 
+    /**
+     * Удаляет указанного слушателя событий действия.
+     *
+     * @param listener слушатель, который больше не должен получать уведомления
+     */
     public void removeActionListener(ActionListener listener) {
         actionListener = AWTEventMulticaster.remove(actionListener, listener);
     }
 
+    /**
+     * Вызывает событие действия, уведомляя всех зарегистрированных слушателей.
+     * Используется при клике на элемент списка.
+     */
     protected void fireActionPerformed() {
         if (actionListener != null) {
             if (actionEvent == null) {

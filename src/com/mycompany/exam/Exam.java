@@ -4,6 +4,8 @@ import controller.Controller;
 import java.io.IOException;
 
 /**
+ * Класс, являющийся главным (main class) классом проекта. 
+ * Запускает программу при помощи контроллера {@link Controller}
  *
  * @author Nastya
  */

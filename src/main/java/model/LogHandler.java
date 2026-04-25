@@ -10,13 +10,25 @@ import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.time.LocalTime;
-
+/**
+ * Класс, отвечающий за работу с файлами логов пациентов:
+ * создание, чтение и запись данных о пациентах и их измерениях.
+ *
+ * <p>Файлы хранятся в подкаталоге {@code logs} относительно директории запуска приложения.
+ * Формат имени файла: <b>{@code [ID пациента].log}</b>, например: {@code P001.log}.
+ * В первых строках файла сохраняется имя пациента, далее — данные измерений.
+ *
+ * @author nsoko
+ */
 public class LogHandler {
 
     private static final String LOGS_DIR_NAME = "logs";
     private static final Path BASE_DIR;
 
-    //Статический блок для определения BASE_DIR до создания экземпляра
+    /**
+     * Статический блок инициализации, определяющий базовую директорию,
+     * где будут храниться все логи. Выполняется до создания экземпляра класса.
+     */
     static {
         try {
             String pathToThisClass = LogHandler.class.getProtectionDomain().getCodeSource().getLocation().toURI().getPath();
@@ -41,11 +53,15 @@ public class LogHandler {
             throw new RuntimeException("Не удалось определить базовую директорию", e);
         }
     }
-
+    /**
+     * Конструктор класса. Создаёт директорию для логов, если она ещё не существует.
+     */
     public LogHandler() {
         createLogsDirectoryIfNotExists();
     }
-
+    /**
+     * Проверяет наличие директории для логов и создаёт её, если она отсутствует.
+     */
     private void createLogsDirectoryIfNotExists() {
         try {
             Files.createDirectories(BASE_DIR);
@@ -53,7 +69,14 @@ public class LogHandler {
             System.err.println("Не удалось создать директорию для логов: " + e.getMessage());
         }
     }
-
+    /**
+     * Создаёт новый пустой файл лога для указанного пациента.
+     * Если файл уже существует, то он не перезаписывается.
+     *
+     * @param patientId уникальный идентификатор пациента
+     * @param fullName полное имя пациента
+     * @return true, если файл успешно создан или уже существовал, иначе false
+     */
     public boolean createEmptyLogFile(String patientId, String fullName) {
         File logFile = getLogFile(patientId);
         try {
@@ -71,11 +94,21 @@ public class LogHandler {
             return false;
         }
     }
-
+    /**
+     * Возвращает файл лога, соответствующий заданному идентификатору пациента.
+     *
+     * @param patientId идентификатор пациента
+     * @return объект типа File, указывающий на файл лога
+     */
     public File getLogFile(String patientId) {
         return BASE_DIR.resolve(patientId + ".log").toFile();
     }
-
+    /**
+     * Записывает новое измерение в конец файла лога пациента.
+     *
+     * @param patient пациент, которому принадлежит измерение
+     * @param measurement само измерение
+     */
     public void writeMeasurement(Patient patient, Measurement measurement) {
         File logFile = getLogFile(patient.getId());
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(logFile, true))) {
@@ -88,7 +121,12 @@ public class LogHandler {
             System.err.println("Ошибка записи в лог-файл: " + e.getMessage());
         }
     }
-
+    /**
+     * Получает имя пациента из его файла лога.
+     *
+     * @param patientId идентификатор пациента
+     * @return имя пациента или строка "Без имени", если не найдено
+     */
     public String getPatientNameFromLogFile(String patientId) {
         File logFile = getLogFile(patientId);
         try (BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
@@ -101,7 +139,14 @@ public class LogHandler {
         }
         return "Без имени";
     }
-
+    /**
+     * Получает список последних измерений для заданного пациента.
+     *
+     * @param patientId идентификатор пациента
+     * @param limit максимальное количество возвращаемых измерений
+     * @return список измерений, или null, если недостаточно данных
+     * @throws IOException если произошла ошибка чтения файла
+     */
     public List<Measurement> getLastMeasurements(String patientId, int limit) throws IOException {
         File logFile = getLogFile(patientId);
         if (!logFile.exists()) {
@@ -143,7 +188,11 @@ public class LogHandler {
         int startIndex = measurements.size() - limit;
         return new ArrayList<>(measurements.subList(startIndex, measurements.size()));
     }
-
+    /**
+     * Получает список всех идентификаторов пациентов, чьи данные есть в системе.
+     *
+     * @return список строковых идентификаторов пациентов
+     */
     public List<String> getAllPatientIds() {
         File dir = BASE_DIR.toFile();
         if (!dir.exists() || !dir.isDirectory()) {
@@ -154,7 +203,11 @@ public class LogHandler {
                 .map(file -> file.getName().replace(".log", ""))
                 .collect(Collectors.toList());
     }
-
+    /**
+     * Получает список всех идентификаторов пациентов, чьи данные есть в системе.
+     *
+     * @return список строковых идентификаторов пациентов
+     */
     public String generateNewPatientId() {
         File dir = BASE_DIR.toFile();
         if (!dir.exists() || !dir.isDirectory()) {
@@ -173,7 +226,12 @@ public class LogHandler {
         int nextNumber = maxNumber + 1;
         return String.format("P%03d", nextNumber);
     }
-
+    /**
+     * Получает полное имя пациента из файла лога и форматирует его в короткий вид.
+     *
+     * @param patientId идентификатор пациента
+     * @return полное имя в формате "Имя И.О." или "Без имени"
+     */
     public String parseFullNameFromLog(String patientId) {
         File logFile = getLogFile(patientId);
         try (BufferedReader reader = new BufferedReader(new FileReader(logFile))) {
@@ -187,7 +245,12 @@ public class LogHandler {
         }
         return "Без имени";
     }
-
+    /**
+     * Форматирует полное имя в короткий вид: "Имя И.О."
+     *
+     * @param fullName полное имя пациента
+     * @return отформатированное имя
+     */
     private String formatShortName(String fullName) {
         String[] parts = fullName.split("\\s+");
         StringBuilder shortName = new StringBuilder(parts[0]);
@@ -199,25 +262,45 @@ public class LogHandler {
         }
         return shortName.toString();
     }
-
+    /**
+     * Получает список температурных значений для указанного пациента.
+     *
+     * @param patientId идентификатор пациента
+     * @return список температур
+     */
     public List<Double> getAllTemperatures(String patientId) {
         return getAllMeasurements(patientId).stream()
                 .map(Measurement::getTemperature)
                 .collect(Collectors.toList());
     }
-
+    /**
+     * Получает список значений пульса для указанного пациента.
+     *
+     * @param patientId идентификатор пациента
+     * @return список пульсов
+     */
     public List<Double> getAllHeartRates(String patientId) {
         return getAllMeasurements(patientId).stream()
                 .map(m -> (double) m.getHeartRate())
                 .collect(Collectors.toList());
     }
-
+    /**
+     * Получает список значений ЦВД для указанного пациента.
+     *
+     * @param patientId идентификатор пациента
+     * @return список ЦВД
+     */
     public List<Double> getAllCvp(String patientId) {
         return getAllMeasurements(patientId).stream()
                 .map(m -> (double) m.getCvp())
                 .collect(Collectors.toList());
     }
-
+     /**
+     * Получает все измерения для указанного пациента из файла лога.
+     *
+     * @param patientId идентификатор пациента
+     * @return список измерений
+     */
     private List<Measurement> getAllMeasurements(String patientId) {
         File logFile = getLogFile(patientId);
         List<Measurement> measurements = new ArrayList<>();
